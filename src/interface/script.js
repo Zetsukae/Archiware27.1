@@ -1,5 +1,5 @@
 import { appSettings, saveAppSettings, applyWindowTransparency, applyDarkMode, applyWallpaper, applyCustomWallpaper, applyDockSettings, applySavedSettings, initSettingsWindow } from './apps/settings.js';
-import { initExplorerWindow, renderExplorerWindow, findExplorerNodeById, findExplorerNodePathByName, getExplorerDesktopNode, getExplorerSegments, navigateExplorerWindow, goBackExplorerWindow, goForwardExplorerWindow, createExplorerFolderInWindow, renameExplorerItemInWindow } from './apps/explorer.js';
+import { initExplorerWindow, renderExplorerWindow, findExplorerNodeById, findExplorerNodePathByName, getExplorerDesktopNode, getExplorerSegments, navigateExplorerWindow, goBackExplorerWindow, goForwardExplorerWindow, createExplorerFolderInWindow, renameExplorerItemInWindow, buildUniqueExplorerItemName } from './apps/explorer.js';
 import { initTextEditorWindow } from './apps/textEditor.js';
 import { initPluberryWindow } from './apps/pluberry.js';
 import { initBrowserWindow } from './apps/browser.js';
@@ -26,9 +26,24 @@ const profileTitleEl = document.getElementById('profileTitle');
 const profileSubtitleEl = document.getElementById('profileSubtitle');
 const topbar = document.querySelector('.desktop__topbar');
 const dock = document.querySelector('.dock');
+const osLauncherOverlay = document.getElementById('osLauncherOverlay');
+const osLauncherPanel = document.querySelector('.os-launcher-panel');
+const osLauncherSearch = document.getElementById('osLauncherSearch');
+const osLauncherPowerBtn = document.getElementById('osLauncherPowerBtn');
+const osLauncherPowerMenu = document.getElementById('osLauncherPowerMenu');
+const osLauncherAppList = document.getElementById('osLauncherAppList');
+const osLauncherApps = [
+  { id: 'explorer', label: 'Explorer', icon: '../public/icons/explorer.svg' },
+  { id: 'settings', label: 'Settings', icon: '../public/icons/settings.svg' },
+  { id: 'browser', label: 'Browser', icon: '../public/icons/browser.svg' },
+  { id: 'music', label: 'Music', icon: '../public/icons/music.svg' },
+  { id: 'pluberry', label: 'Pluberry', icon: '../public/icons/app.svg' },
+  { id: 'editor', label: 'Text Editor', icon: '../public/icons/textEditor.svg' }
+];
 const appWindowCounters = { explorer: 1, settings: 1, editor: 0, pluberry: 0, browser: 0 };
 const windowPlacementState = { offsetX: 30, offsetY: 30 };
 let memoryKillSwitchTriggered = false;
+let altKeyState = { isPressed: false, usedWithOtherKey: false };
 
 const getOpenWindowCount = () => {
   return Array.from(document.querySelectorAll('.window')).filter((win) => !win.classList.contains('is-closed') && !win.classList.contains('is-minimized')).length;
@@ -490,34 +505,139 @@ document.addEventListener('keydown', handleResetShortcut);
 document.addEventListener('click', (event) => {
   const isInsideNotificationCenter = event.target instanceof Node && notificationCenter.contains(event.target);
   const isInsideNotificationStack = event.target instanceof Node && notificationStack.contains(event.target);
+  const isInsideOsLauncherPanel = event.target instanceof Node && osLauncherPanel && osLauncherPanel.contains(event.target);
+
   if (!isInsideNotificationCenter && !isInsideNotificationStack) {
     closeNotificationCenter();
   }
+  if (osLauncherOverlay && osLauncherOverlay.classList.contains('visible') && !isInsideOsLauncherPanel) {
+    hideOSLauncherMenu();
+  }
 });
 
+const renderOSLauncherApps = (filter = '') => {
+  if (!osLauncherAppList) return;
+  const query = filter.trim().toLowerCase();
+  const visibleApps = osLauncherApps.filter((app) => app.label.toLowerCase().includes(query) || app.id.toLowerCase().includes(query));
+  osLauncherAppList.innerHTML = '';
+
+  if (!visibleApps.length) {
+    osLauncherAppList.innerHTML = '<div class="os-launcher-empty">No apps found.</div>';
+    return;
+  }
+
+  visibleApps.forEach((app) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'os-launcher-app-item';
+    button.dataset.app = app.id;
+    button.innerHTML = `
+      <span class="os-launcher-app-icon"><img src="${app.icon}" alt="${app.label}" /></span>
+      <span>${app.label}</span>
+    `;
+    button.addEventListener('click', (event) => {
+      event.stopPropagation();
+      launchAppWindow(app.id);
+      hideOSLauncherMenu();
+    });
+    osLauncherAppList.appendChild(button);
+  });
+};
+
+const hideOSLauncherPowerMenu = () => {
+  if (!osLauncherPowerMenu) return;
+  osLauncherPowerMenu.classList.remove('visible');
+  osLauncherPowerMenu.classList.add('hidden');
+  osLauncherPowerMenu.setAttribute('aria-hidden', 'true');
+};
+
+const toggleOSLauncherPowerMenu = () => {
+  if (!osLauncherPowerMenu) return;
+  const isOpen = osLauncherPowerMenu.classList.contains('visible');
+  osLauncherPowerMenu.classList.toggle('visible', !isOpen);
+  osLauncherPowerMenu.classList.toggle('hidden', isOpen);
+  osLauncherPowerMenu.setAttribute('aria-hidden', isOpen ? 'true' : 'false');
+};
+
+const showOSLauncherMenu = () => {
+  if (!osLauncherOverlay) return;
+  osLauncherOverlay.classList.remove('hidden');
+  osLauncherOverlay.classList.add('visible');
+  osLauncherOverlay.setAttribute('aria-hidden', 'false');
+  hideOSLauncherPowerMenu();
+  renderOSLauncherApps('');
+  if (osLauncherSearch) {
+    osLauncherSearch.value = '';
+    osLauncherSearch.focus();
+  }
+};
+
+const hideOSLauncherMenu = () => {
+  if (!osLauncherOverlay) return;
+  osLauncherOverlay.classList.remove('visible');
+  osLauncherOverlay.classList.add('hidden');
+  osLauncherOverlay.setAttribute('aria-hidden', 'true');
+  hideOSLauncherPowerMenu();
+};
+
+const toggleOSLauncherMenu = () => {
+  if (!osLauncherOverlay) return;
+  if (osLauncherOverlay.classList.contains('visible')) {
+    hideOSLauncherMenu();
+  } else {
+    showOSLauncherMenu();
+  }
+};
+
 const handleAppShortcuts = (event) => {
+  const isAltKey = event.key === 'Alt' || event.code === 'AltLeft' || event.code === 'AltRight';
+  if (isAltKey && !event.repeat && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
+    altKeyState.isPressed = true;
+    altKeyState.usedWithOtherKey = false;
+    return;
+  }
+
+  if (altKeyState.isPressed && !isAltKey) {
+    altKeyState.usedWithOtherKey = true;
+  }
+
   if (event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
-    if (event.key?.toLowerCase() === 'e') {
+    const key = event.key?.toLowerCase();
+    if (key === 'e') {
       event.preventDefault();
       event.stopPropagation();
       launchAppWindow('explorer');
       return;
     }
-    if (event.key?.toLowerCase() === 'i') {
+    if (key === 'i') {
       event.preventDefault();
       event.stopPropagation();
       launchAppWindow('settings');
       return;
     }
-    if (event.key?.toLowerCase() === 'p') {
+    if (key === 'p') {
       event.preventDefault();
       event.stopPropagation();
       launchAppWindow('pluberry');
+      return;
     }
   }
 };
 
 document.addEventListener('keydown', handleAppShortcuts);
+
+document.addEventListener('keyup', (event) => {
+  const isAltKey = event.key === 'Alt' || event.code === 'AltLeft' || event.code === 'AltRight';
+  if (isAltKey && altKeyState.isPressed) {
+    if (!altKeyState.usedWithOtherKey) {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleOSLauncherMenu();
+    }
+    altKeyState.isPressed = false;
+    altKeyState.usedWithOtherKey = false;
+  }
+});
 
 const getMinimizeTargetRect = () => {
   if (!minimizedAppsContainer) return null;
@@ -753,7 +873,7 @@ const createAppWindow = (appId) => {
   bindWindowInteractions(clone);
   if (appId === 'explorer') initExplorerWindow(clone, window.showContextMenu, openTextEditorWindow);
   if (appId === 'settings') initSettingsWindow(clone);
-  if (appId === 'editor') initTextEditorWindow(clone, findExplorerNodeById, refreshExplorerWindows);
+  if (appId === 'editor') initTextEditorWindow(clone, findExplorerNodeById, refreshExplorerWindows, createNewTextFileOnDesktop);
   if (appId === 'pluberry') initPluberryWindow(clone);
   if (appId === 'browser') initBrowserWindow(clone);
   windows = document.querySelectorAll('.window');
@@ -767,20 +887,57 @@ const openExplorerWindow = () => createAppWindow('explorer');
 
 const openSettingsWindow = () => createAppWindow('settings');
 const openPluberryWindow = () => createAppWindow('pluberry');
-const openBrowserWindow = () => createAppWindow('browser');
+const openBrowserWindow = (url = '') => {
+  const win = createAppWindow('browser');
+  if (!win) return null;
+  if (url) {
+    const webview = win.querySelector('.browser-webview');
+    const urlBar = win.querySelector('.browser-url-bar');
+    if (webview) webview.src = url;
+    if (urlBar) urlBar.textContent = url;
+  }
+  return win;
+};
+
+const isTextFileName = (fileName = '') => {
+  const name = String(fileName).trim().toLowerCase();
+  return name.endsWith('.txt') || name.endsWith('.md') || name.endsWith('.markdown');
+};
+
+const createNewTextFileOnDesktop = () => {
+  const desktopNode = getExplorerDesktopNode();
+  if (!desktopNode || desktopNode.type !== 'folder') return null;
+  const name = buildUniqueExplorerItemName(desktopNode, 'New File.txt');
+  const fileNode = {
+    id: `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`,
+    name,
+    type: 'file',
+    icon: '📄',
+    content: ''
+  };
+  desktopNode.children.push(fileNode);
+  if (typeof window.createDesktopFileElement === 'function') {
+    window.createDesktopFileElement(fileNode);
+  }
+  return fileNode;
+};
 
 const openTextEditorWindow = (fileNode) => {
-  const win = createAppWindow('editor');
-  if (!win) return null;
-  if (fileNode) {
-    win.dataset.editorFileId = fileNode.id;
-    const title = win.querySelector('.finder-title');
-    if (title) title.textContent = fileNode.name || 'Untitled';
-    const path = win.querySelector('.editor-path');
-    if (path) path.textContent = `${fileNode.name}`;
-    const area = win.querySelector('.text-editor');
-    if (area) area.value = fileNode.content || '';
+  let targetNode = fileNode;
+  if (!targetNode || !isTextFileName(targetNode.name)) {
+    targetNode = createNewTextFileOnDesktop();
   }
+
+  const win = createAppWindow('editor');
+  if (!win || !targetNode) return null;
+
+  win.dataset.editorFileId = targetNode.id;
+  const title = win.querySelector('.finder-title');
+  if (title) title.textContent = targetNode.name || 'Untitled';
+  const path = win.querySelector('.editor-path');
+  if (path) path.textContent = `${targetNode.name}`;
+  const area = win.querySelector('.text-editor');
+  if (area) area.value = targetNode.content || '';
   return win;
 };
 
@@ -796,7 +953,9 @@ const launchAppWindow = (appId) => {
         ? openPluberryWindow()
         : appId === 'browser'
           ? openBrowserWindow()
-          : null;
+          : appId === 'editor'
+            ? openTextEditorWindow()
+            : null;
   if (win) focusWindow(win);
   return win;
 };
@@ -1198,6 +1357,39 @@ if (shortcutToggleBtn && shortcutDropdown) {
   });
 }
 
+if (osLauncherPowerBtn) {
+  osLauncherPowerBtn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    toggleOSLauncherPowerMenu();
+  });
+}
+
+if (osLauncherPowerMenu) {
+  osLauncherPowerMenu.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const powerAction = target.dataset.power;
+    if (!powerAction) return;
+    event.stopPropagation();
+    hideOSLauncherMenu();
+    if (powerAction === 'shutdown') shutdown();
+    if (powerAction === 'restart') reboot();
+  });
+}
+
+if (osLauncherSearch) {
+  osLauncherSearch.addEventListener('input', (event) => {
+    renderOSLauncherApps(event.target.value || '');
+  });
+}
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    hideOSLauncherMenu();
+    hideOSLauncherPowerMenu();
+  }
+});
+
 document.addEventListener('click', (event) => {
   if (profilePopup && profilePopup.contains(event.target)) return;
   if (clock && clock.contains(event.target)) return;
@@ -1279,7 +1471,14 @@ document.addEventListener('click', (event) => {
 
   dockItems.forEach((item) => {
     item.addEventListener('click', (event) => {
+      const action = item.dataset.menu;
       const app = item.dataset.app;
+      if (action === 'osLauncher') {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleOSLauncherMenu();
+        return;
+      }
       if (!app) return;
 
       event.preventDefault();
@@ -1301,35 +1500,78 @@ document.addEventListener('click', (event) => {
   const actionRefresh = () => window.location.reload();
 
   const deleteSelectedFolders = () => {
-    const selectedFolders = Array.from(document.querySelectorAll('.desktop-folder.is-selected'));
-    selectedFolders.forEach((folderEl) => folderEl.remove());
+    const selectedItems = Array.from(document.querySelectorAll('.desktop-item.is-selected'));
+    selectedItems.forEach((itemEl) => {
+      removeDesktopExplorerEntry(itemEl);
+      itemEl.remove();
+    });
     clearDesktopSelection();
+    refreshExplorerWindows();
   };
 
   const openSelectedFolders = () => {
-    const selectedFolders = Array.from(document.querySelectorAll('.desktop-folder.is-selected'));
-    selectedFolders.forEach((folderEl) => {
-      const name = folderEl.dataset.folderName || folderEl.querySelector('.desktop-folder__name')?.textContent?.trim() || 'New Folder';
-      openFolderInExplorer(name);
+    const selectedItems = Array.from(document.querySelectorAll('.desktop-item.is-selected'));
+    selectedItems.forEach((itemEl) => {
+      if (itemEl.classList.contains('desktop-folder')) {
+        const name = itemEl.dataset.folderName || itemEl.querySelector('.desktop-folder__name')?.textContent?.trim() || 'New Folder';
+        openFolderInExplorer(name);
+      } else if (itemEl.classList.contains('desktop-file')) {
+        const node = findExplorerNodeById(itemEl.dataset.explorerNodeId);
+        if (node) openTextEditorWindow(node);
+      }
     });
   };
 
   const renameSelectedFolders = () => {
-    const selectedFolders = Array.from(document.querySelectorAll('.desktop-folder.is-selected'));
-    if (selectedFolders.length === 0) return;
-    const firstFolder = selectedFolders[0];
-    showRenamePanel(firstFolder);
-    selectedFolders.slice(1).forEach((folderEl) => folderEl.classList.remove('is-selected'));
+    const selectedItems = Array.from(document.querySelectorAll('.desktop-item.is-selected'));
+    if (selectedItems.length === 0) return;
+    const firstItem = selectedItems[0];
+    showRenamePanel(firstItem);
+    selectedItems.slice(1).forEach((itemEl) => itemEl.classList.remove('is-selected'));
   };
 
   let renameTargetEl = null;
 
-  const getFolderName = (targetEl) => targetEl?.dataset.folderName || targetEl?.querySelector('.desktop-folder__name')?.textContent?.trim() || 'Item';
+  const getFolderName = (targetEl) => targetEl?.dataset.folderName || targetEl?.dataset.fileName || targetEl?.querySelector('.desktop-folder__name, .desktop-file__name')?.textContent?.trim() || 'Item';
+
+  const buildUniqueDesktopItemName = (baseName, targetEl = null) => {
+    const trimmedBase = String(baseName || '').trim();
+    const isFile = targetEl?.classList.contains('desktop-file');
+    let candidate = trimmedBase || (isFile ? 'New File.txt' : 'Untitled Folder');
+    let extension = '';
+
+    if (isFile) {
+      const currentName = getFolderName(targetEl);
+      if (currentName && currentName.includes('.')) {
+        extension = currentName.slice(currentName.lastIndexOf('.'));
+      }
+
+      if (candidate.includes('.')) {
+        extension = candidate.slice(candidate.lastIndexOf('.'));
+      }
+
+      if (!candidate.includes('.') && extension) {
+        candidate = `${candidate}${extension}`;
+      }
+      if (!candidate.includes('.') && !extension) {
+        candidate = `${candidate}.txt`;
+      }
+    }
+
+    const existingNames = getExistingFolderNames(targetEl).map((name) => name.toLowerCase());
+    if (!existingNames.includes(candidate.toLowerCase())) return candidate;
+
+    let suffix = 2;
+    while (existingNames.includes(`${candidate} ${suffix}`.toLowerCase())) {
+      suffix += 1;
+    }
+    return `${candidate} ${suffix}`;
+  };
 
   const getExistingFolderNames = (currentEl = null) => {
     const currentName = currentEl ? getFolderName(currentEl) : '';
-    return Array.from(document.querySelectorAll('.desktop-folder'))
-      .map((folderEl) => getFolderName(folderEl))
+    return Array.from(document.querySelectorAll('.desktop-item'))
+      .map((itemEl) => getFolderName(itemEl))
       .filter((name) => Boolean(name) && name !== currentName);
   };
 
@@ -1370,53 +1612,54 @@ document.addEventListener('click', (event) => {
       input.className = 'desktop-folder__rename-input';
       input.maxLength = 24;
       input.setAttribute('aria-label', 'Rename folder');
+      input.__renameHasCommitted = false;
       targetEl.appendChild(input);
+      const commitRename = () => {
+        if (input.__renameHasCommitted || !targetEl.classList.contains('is-renaming')) return;
+        input.__renameHasCommitted = true;
+        const cleanName = input.value.trim();
+        const labelEl = targetEl.querySelector('.desktop-folder__name, .desktop-file__name');
+        if (!cleanName) {
+          if (labelEl) labelEl.style.display = 'block';
+          targetEl.classList.remove('is-renaming');
+          input.style.display = 'none';
+          return;
+        }
+        const finalName = buildUniqueDesktopItemName(cleanName, targetEl);
+        if (labelEl) {
+          labelEl.textContent = finalName;
+          labelEl.style.display = 'block';
+        }
+        if (targetEl.classList.contains('desktop-file')) {
+          targetEl.dataset.fileName = finalName;
+        } else {
+          targetEl.dataset.folderName = finalName;
+        }
+        updateDesktopExplorerEntry(targetEl, finalName);
+        targetEl.setAttribute('aria-label', finalName);
+        targetEl.classList.remove('is-renaming');
+        input.style.display = 'none';
+      };
+
       input.addEventListener('keydown', (ev) => {
         if (ev.key === 'Enter') {
           ev.preventDefault();
-          const cleanName = input.value.trim();
-          if (!cleanName) return;
-          const finalName = buildUniqueFolderName(cleanName, targetEl);
-          const labelEl = targetEl.querySelector('.desktop-folder__name');
-          if (labelEl) {
-            labelEl.textContent = finalName;
-            labelEl.style.display = 'block';
-          }
-          targetEl.dataset.folderName = finalName;
-          updateDesktopExplorerEntry(targetEl, finalName);
-          targetEl.setAttribute('aria-label', finalName);
-          targetEl.classList.remove('is-renaming');
-          input.style.display = 'none';
+          ev.stopPropagation();
+          commitRename();
           input.blur();
+          return;
         }
         if (ev.key === 'Escape') {
           ev.preventDefault();
-          const labelEl = targetEl.querySelector('.desktop-folder__name');
+          ev.stopPropagation();
+          const labelEl = targetEl.querySelector('.desktop-folder__name, .desktop-file__name');
           if (labelEl) labelEl.style.display = 'block';
           targetEl.classList.remove('is-renaming');
           input.style.display = 'none';
         }
       });
       input.addEventListener('blur', () => {
-        const cleanName = input.value.trim();
-        if (!cleanName) {
-          const labelEl = targetEl.querySelector('.desktop-folder__name');
-          if (labelEl) labelEl.style.display = 'block';
-          targetEl.classList.remove('is-renaming');
-          input.style.display = 'none';
-          return;
-        }
-        const finalName = buildUniqueFolderName(cleanName, targetEl);
-        const labelEl = targetEl.querySelector('.desktop-folder__name');
-        if (labelEl) {
-          labelEl.textContent = finalName;
-          labelEl.style.display = 'block';
-        }
-        targetEl.dataset.folderName = finalName;
-        updateDesktopExplorerEntry(targetEl, finalName);
-        targetEl.setAttribute('aria-label', finalName);
-        targetEl.classList.remove('is-renaming');
-        input.style.display = 'none';
+        commitRename();
       });
     }
     return input;
@@ -1425,7 +1668,7 @@ document.addEventListener('click', (event) => {
   const hideRenamePanel = () => {
     if (!renameTargetEl) return;
     const input = renameTargetEl.querySelector('.desktop-folder__rename-input');
-    const labelEl = renameTargetEl.querySelector('.desktop-folder__name');
+    const labelEl = renameTargetEl.querySelector('.desktop-folder__name, .desktop-file__name');
     if (input) input.style.display = 'none';
     if (labelEl) labelEl.style.display = 'block';
     renameTargetEl.classList.remove('is-renaming');
@@ -1434,12 +1677,16 @@ document.addEventListener('click', (event) => {
 
   const showRenamePanel = (targetEl) => {
     if (!targetEl) return;
+    if (renameTargetEl && renameTargetEl !== targetEl) {
+      hideRenamePanel();
+    }
     const currentName = getFolderName(targetEl);
     const input = ensureRenameInput(targetEl);
+    input.__renameHasCommitted = false;
     input.value = currentName;
     targetEl.classList.add('is-renaming');
     requestAnimationFrame(() => {
-      const labelEl = targetEl.querySelector('.desktop-folder__name');
+      const labelEl = targetEl.querySelector('.desktop-folder__name, .desktop-file__name');
       if (labelEl) {
         labelEl.style.display = 'none';
       }
@@ -1467,7 +1714,7 @@ document.addEventListener('click', (event) => {
     }
 
     const folder = document.createElement('div');
-    folder.className = 'desktop-folder';
+    folder.className = 'desktop-item desktop-folder';
     const resolvedName = buildUniqueFolderName(name || `New Folder ${folderCounter}`);
     const desktopNode = getExplorerDesktopNode();
 
@@ -1543,10 +1790,85 @@ document.addEventListener('click', (event) => {
     return folder;
   };
 
+  const createDesktopFileElement = (fileEntry) => {
+    if (!fileEntry || fileEntry.type !== 'file') return null;
+    const desktopArea = document.querySelector('.desktop__content');
+    if (!desktopArea) return null;
+    let container = document.querySelector('.desktop-folders');
+    if (!container) {
+      container = document.createElement('div');
+      container.className = 'desktop-folders';
+      desktopArea.appendChild(container);
+    }
+
+    const fileItem = document.createElement('div');
+    fileItem.className = 'desktop-item desktop-file';
+    fileItem.dataset.explorerNodeId = fileEntry.id;
+    fileItem.dataset.fileName = fileEntry.name;
+    fileItem.setAttribute('role', 'button');
+    fileItem.setAttribute('tabindex', '0');
+    fileItem.setAttribute('aria-label', fileEntry.name);
+
+    const icon = document.createElement('div');
+    icon.className = 'desktop-file__icon desktop-file__icon--svg';
+    const isTextOrPdfFile = fileEntry.type === 'file' && /\.(txt|md|markdown|pdf)$/i.test(fileEntry.name || '');
+    icon.innerHTML = isTextOrPdfFile
+      ? '<img src="../public/icons/text.svg" alt="Document file" />'
+      : `
+        <div class="desktop-file__mark">${String(fileEntry.name || '').split('.').pop().toUpperCase()}</div>
+        <div class="desktop-file__detail-line desktop-file__detail-line--short"></div>
+        <div class="desktop-file__detail-line desktop-file__detail-line--long"></div>
+      `;
+
+    const label = document.createElement('div');
+    label.className = 'desktop-file__name';
+    label.textContent = fileEntry.name;
+
+    fileItem.appendChild(icon);
+    fileItem.appendChild(label);
+    container.appendChild(fileItem);
+
+    fileItem.addEventListener('click', (event) => {
+      if (!event.target || event.target.closest('.desktop-folder__rename-input')) return;
+      if (!event.shiftKey && !event.metaKey && !event.ctrlKey) {
+        clearDesktopSelection();
+      }
+      fileItem.classList.add('is-selected');
+      event.preventDefault();
+    });
+
+    fileItem.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        const node = findExplorerNodeById(fileEntry.id);
+        if (node) openTextEditorWindow(node);
+      }
+    });
+
+    fileItem.addEventListener('dblclick', (event) => {
+      event.preventDefault();
+      const node = findExplorerNodeById(fileEntry.id);
+      if (node) openTextEditorWindow(node);
+    });
+
+    return fileItem;
+  };
+
+  window.createDesktopFileElement = createDesktopFileElement;
+
   const actionNewFolder = () => {
     const folder = createDesktopFolderElement(`New Folder ${folderCounter}`);
     if (folder) folderCounter += 1;
   };
+
+  const desktopNode = getExplorerDesktopNode();
+  if (desktopNode && Array.isArray(desktopNode.children)) {
+    desktopNode.children.forEach((entry) => {
+      if (entry.type === 'file') {
+        createDesktopFileElement(entry);
+      }
+    });
+  }
 
   const actionShowDesktop = () => {
     const allWindows = document.querySelectorAll('.window');
@@ -1594,13 +1916,13 @@ document.addEventListener('click', (event) => {
     // prevent on windows/dock/topbar
     if (isSelectionBlockedTarget(e.target)) return;
 
-    const targetItem = e.target.closest('.desktop-folder');
-    const selectedFolders = Array.from(document.querySelectorAll('.desktop-folder.is-selected'));
-    if (targetItem && (selectedFolders.includes(targetItem) || selectedFolders.length > 0)) {
+    const targetItem = e.target.closest('.desktop-item');
+    const selectedItems = Array.from(document.querySelectorAll('.desktop-item.is-selected'));
+    if (targetItem && (selectedItems.includes(targetItem) || selectedItems.length > 0)) {
       e.preventDefault();
       showContextMenu(e.clientX, e.clientY, [
-        { label: selectedFolders.length > 1 ? 'Open All' : 'Open', action: openSelectedFolders },
-        { label: selectedFolders.length > 1 ? 'Rename All' : 'Rename', action: renameSelectedFolders },
+        { label: selectedItems.length > 1 ? 'Open All' : 'Open', action: openSelectedFolders },
+        { label: selectedItems.length > 1 ? 'Rename All' : 'Rename', action: renameSelectedFolders },
         { type: 'divider' },
         { label: 'Delete', action: deleteSelectedFolders },
         { type: 'divider' },
@@ -1611,10 +1933,18 @@ document.addEventListener('click', (event) => {
 
     if (targetItem) {
       e.preventDefault();
+      const openAction = () => {
+        if (targetItem.classList.contains('desktop-folder')) {
+          openFolderInExplorer(targetItem.dataset.folderName || 'New Folder');
+        } else if (targetItem.classList.contains('desktop-file')) {
+          const node = findExplorerNodeById(targetItem.dataset.explorerNodeId);
+          if (node) openTextEditorWindow(node);
+        }
+      };
       showContextMenu(e.clientX, e.clientY, [
         { label: 'Rename', action: () => renameDesktopItem(targetItem) },
         { type: 'divider' },
-        { label: 'Open', action: () => openFolderInExplorer(targetItem.dataset.folderName || 'New Folder') },
+        { label: 'Open', action: openAction },
         { type: 'divider' },
         { label: 'Delete', action: () => {
           removeDesktopExplorerEntry(targetItem);
@@ -1682,22 +2012,22 @@ document.addEventListener('click', (event) => {
   };
 
   const clearDesktopSelection = () => {
-    document.querySelectorAll('.desktop-folder.is-selected').forEach((folderEl) => {
-      folderEl.classList.remove('is-selected');
+    document.querySelectorAll('.desktop-item.is-selected').forEach((itemEl) => {
+      itemEl.classList.remove('is-selected');
     });
   };
 
   const selectFoldersInRect = (rect) => {
     clearDesktopSelection();
     const selected = [];
-    document.querySelectorAll('.desktop-folder').forEach((folderEl) => {
-      const folderRect = folderEl.getBoundingClientRect();
-      const folderCenterX = folderRect.left + folderRect.width / 2;
-      const folderCenterY = folderRect.top + folderRect.height / 2;
-      const intersects = folderCenterX >= rect.left && folderCenterX <= rect.left + rect.width && folderCenterY >= rect.top && folderCenterY <= rect.top + rect.height;
+    document.querySelectorAll('.desktop-item').forEach((itemEl) => {
+      const itemRect = itemEl.getBoundingClientRect();
+      const itemCenterX = itemRect.left + itemRect.width / 2;
+      const itemCenterY = itemRect.top + itemRect.height / 2;
+      const intersects = itemCenterX >= rect.left && itemCenterX <= rect.left + rect.width && itemCenterY >= rect.top && itemCenterY <= rect.top + rect.height;
       if (intersects) {
-        folderEl.classList.add('is-selected');
-        selected.push(folderEl);
+        itemEl.classList.add('is-selected');
+        selected.push(itemEl);
       }
     });
 
@@ -1729,12 +2059,12 @@ document.addEventListener('click', (event) => {
     if (e.button !== 0) return;
     if (!e.target || isSelectionBlockedTarget(e.target)) return;
 
-    const clickedFolder = e.target.closest('.desktop-folder');
-    if (clickedFolder) {
+    const clickedItem = e.target.closest('.desktop-item');
+    if (clickedItem) {
       if (!e.shiftKey && !e.metaKey && !e.ctrlKey) {
         clearDesktopSelection();
       }
-      clickedFolder.classList.add('is-selected');
+      clickedItem.classList.add('is-selected');
       e.preventDefault();
       return;
     }

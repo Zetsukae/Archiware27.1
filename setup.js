@@ -179,6 +179,12 @@ const handleBack = () => {
 };
 
 const handleFinish = () => {
+  if (actionButton) {
+    actionButton.disabled = true;
+  }
+  if (backButton) {
+    backButton.disabled = true;
+  }
 
   localStorage.setItem('archiware_username', state.username || 'Guest');
   localStorage.setItem('archiware_profile', state.avatar);
@@ -187,17 +193,19 @@ const handleFinish = () => {
   localStorage.setItem('archiware_error_reports', String(state.options.errorReports));
   localStorage.setItem('archiware_localization', String(state.options.localization));
 
-  const screenFade = document.createElement('div');
-  screenFade.className = 'screen-fade';
-  document.body.appendChild(screenFade);
-
-  requestAnimationFrame(() => {
-    screenFade.classList.add('visible');
-  });
-
   setTimeout(() => {
-    window.location.href = 'src/interface/index.html';
-  }, 5000);
+    const screenFade = document.createElement('div');
+    screenFade.className = 'screen-fade';
+    document.body.appendChild(screenFade);
+
+    requestAnimationFrame(() => {
+      screenFade.classList.add('visible');
+    });
+
+    setTimeout(() => {
+      window.location.href = 'src/interface/index.html';
+    }, 5000);
+  }, 2000);
 };
 
 const startSetupSequence = () => {
@@ -238,6 +246,20 @@ if (usernameInput) {
 }
 
 const legalAcceptInput = document.getElementById('legalAccept');
+const licenseContentEl = document.getElementById('licenseContent');
+
+const loadRootLicense = async () => {
+  if (!licenseContentEl) return;
+  try {
+    const response = await fetch('./LICENSE');
+    if (!response.ok) throw new Error('LICENSE unavailable');
+    const text = await response.text();
+    licenseContentEl.textContent = text.trim() || 'LICENSE file is empty.';
+  } catch (error) {
+    licenseContentEl.textContent = 'Unable to load LICENSE file from the root path.';
+  }
+};
+
 if (legalAcceptInput) {
   legalAcceptInput.checked = false;
   state.legalAccepted = false;
@@ -246,6 +268,8 @@ if (legalAcceptInput) {
     renderButtons();
   });
 }
+
+loadRootLicense();
 
 
 avatarOptions.forEach((button) => {

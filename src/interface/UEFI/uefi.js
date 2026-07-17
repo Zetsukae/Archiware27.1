@@ -37,7 +37,7 @@ function exitUefi() {
   }
   else if (firstBootOption.includes('network')) {
 
-    const url = prompt("Enter Boot Server URL (e.g. tftp:
+    const url = prompt("Enter Boot Server URL (e.g. tftp://example.com)");
     if (url) {
       showLoadingScreen(`Connecting to ${url}...`)
       setTimeout(() => {

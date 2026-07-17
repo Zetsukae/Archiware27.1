@@ -2,7 +2,8 @@
             ARCHIWARE OS - GPL-3.0 LICENSE
 ========================================================
 This software is distributed under the terms of the GNU 
-General Public License version 3 (GPL-3.0).
+General Public License version 3 (GPL-3.0), with the 
+exception of the project's visual assets detailed below.
 
 1. ORIGINAL WORK, CREDITS & INSPIRATION
 -----------------------------
@@ -23,11 +24,26 @@ remain with their respective authors. This "Liquid Glass"
 visual rewrite and its modules are distributed under the 
 same GPL-3.0 license.
 
-2. KEY TERMS & CONDITIONS
---------------------------
-- You are free to share, copy, and modify this code.
-- Any derivative work must also remain open-source and 
-  be distributed under this exact same GPL-3.0 license.
+2. ASSETS & ICONS LICENSE (ALL RIGHTS RESERVED)
+-----------------------------------------------
+All custom icons, brand assets, and logos created for 
+ArchiwareOS (specifically those located within the assets 
+or icon directories) are proprietary and are NOT covered 
+by the GPL-3.0 license.
+
+- These visual assets are: Copyright © 2026 Zetsukae. 
+  All Rights Reserved.
+- You are NOT allowed to redistribute, modify, sub-license, 
+  or reuse these icons in any other project or derivative 
+  work without explicit written permission from the author.
+- Anyone creating a fork or derivative version of this 
+  software MUST remove or replace these icons.
+
+3. KEY TERMS & CONDITIONS (FOR THE CODE)
+----------------------------------------
+- You are free to share, copy, and modify the code of this project.
+- Any derivative work of the code must also remain open-source 
+  and be distributed under this exact same GPL-3.0 license.
 - This software is provided "as is", without warranty of 
   any kind.
 ========================================================

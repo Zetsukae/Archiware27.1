@@ -128,7 +128,7 @@
 
     <nav class="dock liquid-glass-card dock-card" aria-label="Dock">
       <div class="dock__inner">
-        <button class="dock__item" aria-label="Applications">
+        <button class="dock__item" data-menu="osLauncher" aria-label="Applications">
           <img src="../public/icons/app.svg" alt="Applications" />
         </button>
         <button class="dock__item" data-app="explorer" aria-label="Explorer">
@@ -145,6 +145,22 @@
         </button>
       </div>
     </nav>
+
+    <div class="os-launcher-overlay hidden" id="osLauncherOverlay" aria-hidden="true">
+      <div class="os-launcher-panel liquid-glass-card" role="dialog" aria-label="Applications menu">
+        <div class="os-launcher-header">
+          <div class="os-launcher-search">
+            <input id="osLauncherSearch" class="os-launcher-search-input" type="search" placeholder="Search apps" autocomplete="off" />
+          </div>
+          <button class="os-launcher-power-btn" id="osLauncherPowerBtn" type="button" aria-label="Power options">⏻</button>
+          <div class="os-launcher-power-menu hidden" id="osLauncherPowerMenu" aria-hidden="true">
+            <button type="button" class="os-launcher-power-item" data-power="shutdown">Shut Down</button>
+            <button type="button" class="os-launcher-power-item" data-power="restart">Restart</button>
+          </div>
+        </div>
+        <div class="os-launcher-app-list" id="osLauncherAppList"></div>
+      </div>
+    </div>
   </div>
 
   <section class="window liquid-glass-card is-closed" id="settingsWindow" data-app-label="Settings" aria-label="Settings">

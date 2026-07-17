@@ -10,6 +10,24 @@ const explorerRootNode = {
       children: [
         { id: 'notes', name: 'Notes.txt', type: 'file', icon: '📄', content: 'These are your notes.\n\n- Item 1\n- Item 2\n' },
         { id: 'resume', name: 'Resume.pdf', type: 'file', icon: '📄' },
+        {
+          id: 'icons',
+          name: 'Icons',
+          type: 'folder',
+          children: [
+            { id: 'about-icon', name: 'about.svg', type: 'file', icon: '🖼️' },
+            { id: 'app-icon', name: 'app.svg', type: 'file', icon: '🖼️' },
+            { id: 'browser-icon', name: 'browser.svg', type: 'file', icon: '🖼️' },
+            { id: 'customize-icon', name: 'customize.svg', type: 'file', icon: '🖼️' },
+            { id: 'explorer-icon', name: 'explorer.svg', type: 'file', icon: '🖼️' },
+            { id: 'general-icon', name: 'general.svg', type: 'file', icon: '🖼️' },
+            { id: 'music-icon', name: 'music.svg', type: 'file', icon: '🖼️' },
+            { id: 'settings-icon', name: 'settings.svg', type: 'file', icon: '🖼️' },
+            { id: 'text-icon', name: 'text.svg', type: 'file', icon: '🖼️' },
+            { id: 'texteditor-icon', name: 'textEditor.svg', type: 'file', icon: '🖼️' },
+            { id: 'license-icons', name: 'LICENSE-ICONS.md', type: 'file', icon: '📄', content: '========================================================\n        ARCHIWARE OS - ICONS & VISUAL ASSETS\n========================================================\nCopyright © 2026 Zetsukae. All Rights Reserved.\n\nAll custom icons, brand assets, and logos created for \nArchiwareOS are proprietary and are strictly excluded \nfrom the GNU General Public License v3.0 applied to \nthe software\'s code.\n\nTERMS OF USE:\n- You are NOT allowed to copy, redistribute, modify, \n  sub-license, or reuse these icons in any other project \n  or derivative work without explicit written permission.\n- Any fork, modification, or derivative version of \n  ArchiwareOS MUST completely remove or replace these \n  visual assets.\n========================================================' }
+          ]
+        },
         { id: 'work', name: 'Work', type: 'folder', children: [
           { id: 'roadmap', name: 'Roadmap.md', type: 'file', icon: '📄', content: '# Roadmap\nWork files here.' },
           { id: 'brief', name: 'Brief.docx', type: 'file', icon: '📄' }
@@ -227,9 +245,15 @@ export const renderExplorerWindow = (windowEl, showContextMenu, openTextEditorWi
 
       if (entry.type === 'folder') card.classList.add('is-folder');
 
+      const isTextOrPdfFile = entry.type === 'file' && /\.(txt|md|markdown|pdf)$/i.test(entry.name || '');
+      const isSvgFile = entry.type === 'file' && /\.svg$/i.test(entry.name || '');
       const iconHtml = entry.type === 'folder'
         ? '<img src="../public/icons/explorer.svg" alt="Folder" />'
-        : (entry.icon ? escapeExplorerText(entry.icon) : '📄');
+        : isSvgFile
+          ? `<img src="../public/icons/${escapeExplorerText(entry.name)}" alt="${escapeExplorerText(entry.name)}" />`
+          : isTextOrPdfFile
+            ? '<img src="../public/icons/text.svg" alt="Document file" />'
+            : (entry.icon ? escapeExplorerText(entry.icon) : '📄');
 
       const isRenaming = windowEl.dataset.explorerRenameNodeId === entry.id;
       if (isRenaming) {
@@ -274,6 +298,11 @@ export const renderExplorerWindow = (windowEl, showContextMenu, openTextEditorWi
         if (name.endsWith('.txt') || name.endsWith('.md') || name.endsWith('.markdown')) {
           const node = findExplorerNodeById(entry.id);
           openTextEditorWindow(node);
+          return;
+        }
+        if (name.endsWith('.svg')) {
+          const browserUrl = `../public/icons/${escapeExplorerText(entry.name)}`;
+          openBrowserWindow(browserUrl);
         }
       });
 
@@ -292,8 +321,11 @@ export const renderExplorerWindow = (windowEl, showContextMenu, openTextEditorWi
         } else {
           const name = (entry.name || '').toLowerCase();
           const isText = name.endsWith('.txt') || name.endsWith('.md') || name.endsWith('.markdown');
+          const isSvg = name.endsWith('.svg');
           if (isText) {
             items.push({ label: 'Open', action: () => { const node = findExplorerNodeById(entry.id); openTextEditorWindow(node); } });
+          } else if (isSvg) {
+            items.push({ label: 'Open', action: () => { openBrowserWindow(`../public/icons/${escapeExplorerText(entry.name)}`); } });
           }
           items = items.concat([
             { label: 'Rename', action: () => { windowEl.dataset.explorerRenameNodeId = entry.id; renderExplorerWindow(windowEl, showContextMenu, openTextEditorWindow); } },
