@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Archiware OS</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="desktop">
+    <header class="desktop__topbar">
+      <div class="topbar-left">
+        <div class="status-pill profile-trigger" id="profileTrigger">Archiware OS</div>
+        <div class="minimized-apps" id="minimizedApps" aria-label="Minimized apps"></div>
+      </div>
+      <div class="status-pill calendar-trigger" id="clock">--:--</div>
+    </header>
+
+    <div class="profile-popup hidden" id="profilePopup" aria-hidden="true">
+      <div class="profile-header">
+        <p class="profile-title" id="profileTitle">Welcome <span id="profileSubtitle">User</span></p>
+      </div>
+      <div class="profile-section">
+        <p class="section-title">Quick Access</p>
+        <button class="profile-button" id="quickFilesBtn" type="button">Files</button>
+      </div>
+      <div class="profile-section">
+        <p class="section-title">Power</p>
+        <button class="profile-button" id="powerOffBtn">Shut Down</button>
+        <button class="profile-button" id="restartBtn">Restart</button>
+      </div>
+    </div>
+
+    <div class="calendar-popup hidden" id="calendarPopup" aria-hidden="true">
+      <div class="calendar-header">
+        <div>
+          <p class="calendar-label">Calendar</p>
+          <p class="calendar-date" id="calendarDate"></p>
+        </div>
+      </div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+
+    <main class="desktop__content">
+      <section class="window" id="mainWindow" data-app-label="Archiware Workspace" data-state="default" aria-label="Open window">
+        <div class="window__header">
+          <div class="window__controls">
+            <button class="window__control window__control--close" data-action="close" aria-label="Close"></button>
+            <button class="window__control window__control--minimize" data-action="minimize" aria-label="Minimize"></button>
+          </div>
+          <div class="window__title">Archiware Workspace</div>
+        </div>
+        <div class="window__content">
+          <div class="window__body">
+            <h1>Welcome <span id="welcomeUsername">User</span> to Archiware</h1>
+            <p>A web desktop inspired by macOS, with a Liquid Glass aesthetic and an immersive experience.</p>
+            <div class="app-grid">
+              <article id="openFilesApp" class="app-card" role="button" tabindex="0">
+                <img class="app-card__icon app-card__icon--svg" src="../public/icons/explorer.svg" alt="Explorer" />
+                <strong>Files</strong>
+              </article>
+              <a class="app-card app-card--link" href="https://github.com/SillyFlisy/Archiware" target="_blank" rel="noopener noreferrer">
+                <span class="app-card__icon">🐙</span>
+                <strong>View GitHub</strong>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <section class="window liquid-glass-card is-closed" id="explorerWindow" data-app-label="Finder" aria-label="Finder">
+  <div class="window__header finder-header">
+    <div class="window__controls">
+      <button class="window__control window__control--close" data-action="close" aria-label="Close"></button>
+      <button class="window__control window__control--minimize" data-action="minimize" aria-label="Minimize"></button>
+    </div>
+
+    <div class="finder-toolbar">
+      <div class="finder-navigation">
+        <button class="toolbar-btn" aria-label="Previous">◀</button>
+        <button class="toolbar-btn" aria-label="Next">▶</button>
+      </div>
+      <div class="finder-title">Disk C</div>
+      <div class="finder-search-container">
+        <input class="finder-search" type="search" placeholder="Search" />
+      </div>
+    </div>
+  </div>
+
+  <div class="window__content finder-content">
+    <div class="finder-layout">
+      <aside class="finder-sidebar">
+        <div class="sidebar-group">
+          <span class="sidebar-group-title">Favorites</span>
+          <ul>
+            <li class="active" data-folder-id="root"><span class="sidebar-icon">💻</span> Disk C</li>
+            <li data-folder-id="documents"><span class="sidebar-icon">📂</span> Documents</li>
+            <li data-folder-id="downloads"><span class="sidebar-icon">⬇️</span> Downloads</li>
+            <li data-folder-id="desktop"><span class="sidebar-icon">🖥️</span> Desktop</li>
+          </ul>
+        </div>
+      </aside>
+
+      <main class="finder-main">
+        <div class="path-bar">C:/sda1/Desktop/</div>
+        <div class="file-grid">
+          <div class="file-card">
+            <div class="file-icon">📁</div>
+            <div class="file-name">Projects</div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</section>
+    </main>
+
+    <nav class="dock liquid-glass-card dock-card" aria-label="Dock">
+      <div class="dock__inner">
+        <button class="dock__item" aria-label="Applications">
+          <img src="../public/icons/app.svg" alt="Applications" />
+        </button>
+        <button class="dock__item" data-app="explorer" aria-label="Explorer">
+          <img src="../public/icons/explorer.svg" alt="Explorer" />
+        </button>
+        <button class="dock__item" data-app="settings" aria-label="Settings">
+          <img src="../public/icons/settings.svg" alt="Settings" />
+        </button>
+        <button class="dock__item" data-app="music" aria-label="Music">
+          <img src="../public/icons/music.svg" alt="Music" />
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <section class="window liquid-glass-card is-closed" id="settingsWindow" data-app-label="Settings" aria-label="Settings">
+    <div class="window__header finder-header">
+      <div class="window__controls">
+        <button class="window__control window__control--close" data-action="close" aria-label="Close"></button>
+        <button class="window__control window__control--minimize" data-action="minimize" aria-label="Minimize"></button>
+      </div>
+
+      <div class="finder-toolbar">
+        <div class="finder-title">Settings</div>
+      </div>
+    </div>
+
+    <div class="window__content finder-content">
+      <div class="finder-layout settings-layout">
+        <aside class="finder-sidebar settings-sidebar">
+          <div class="sidebar-group">
+            <span class="sidebar-group-title">Settings</span>
+            <ul>
+              <li class="active" data-settings-tab="general"><span class="sidebar-icon">⚙️</span> General</li>
+              <li data-settings-tab="appearance"><span class="sidebar-icon">🌙</span> Appearance</li>
+              <li data-settings-tab="about"><span class="sidebar-icon">📄</span> About</li>
+            </ul>
+          </div>
+        </aside>
+
+        <main class="finder-main settings-main">
+          <div class="path-bar">System Settings</div>
+          <div class="settings-panel settings-panel--general active" data-settings-panel="general">
+            <div class="settings-section">
+              <h3>System</h3>
+              <div class="settings-row"><span>OS</span><strong>Archiware OS 27.1</strong></div>
+              <div class="settings-row"><span>CPU</span><strong>AMD Ryzen 5 7600X</strong></div>
+              <div class="settings-row"><span>Memory</span><strong>32 GB</strong></div>
+              <div class="settings-row storage-row">
+                <div>
+                  <span>Storage</span>
+                  <div class="storage-info">1 TB total • 65% used</div>
+                </div>
+                <progress id="storageProgress" value="65" max="100"></progress>
+              </div>
+            </div>
+            <div class="settings-section">
+              <h3>Sound</h3>
+              <div class="settings-row"><span>Sound settings</span><button class="button" type="button" id="soundAccessButton">Access</button></div>
+            </div>
+            <div class="settings-section">
+              <h3>Notifications</h3>
+              <div class="settings-row settings-toggle-row"><span>Notifications</span><label class="toggle-switch"><input type="checkbox" id="notificationsToggle" checked /><span class="toggle-slider"></span></label></div>
+            </div>
+            <div class="settings-section">
+              <h3>Power</h3>
+              <div class="settings-row settings-toggle-row"><span>Power saver</span><label class="toggle-switch"><input type="checkbox" id="powerSaverToggle" /><span class="toggle-slider"></span></label></div>
+            </div>
+          </div>
+
+          <div class="settings-panel" data-settings-panel="sound">
+            <div class="settings-section">
+              <h3>Sound devices</h3>
+              <ul class="sound-device-list">
+                <li class="sound-device-item">
+                  <strong>Output device</strong>
+                  <span>Speakers (Default)</span>
+                </li>
+                <li class="sound-device-item">
+                  <strong>Input device</strong>
+                  <span>Microphone (Default)</span>
+                </li>
+              </ul>
+            </div>
+            <div class="settings-section">
+              <h3>Volume</h3>
+              <div class="settings-row"><span>Output volume</span><input type="range" min="0" max="100" value="70" id="soundOutputSlider" /></div>
+              <div class="settings-row"><span>Input volume</span><input type="range" min="0" max="100" value="75" id="soundInputSlider" /></div>
+            </div>
+          </div>
+
+          <div class="settings-panel" data-settings-panel="appearance">
+            <div class="settings-section">
+              <h3>Appearance</h3>
+              <div class="settings-row"><span>Window transparency</span><input type="range" min="0" max="100" value="40" id="transparencySlider" /></div>
+              <div class="settings-row settings-toggle-row"><span>Darker mode</span><label class="toggle-switch"><input type="checkbox" id="darkModeToggle" /><span class="toggle-slider"></span></label></div>
+            </div>
+            <div class="settings-section">
+              <h3>Wallpaper</h3>
+              <div class="wallpaper-grid" id="wallpaperGrid"></div>
+              <div class="wallpaper-actions">
+                <input type="file" accept="image/*" id="localWallpaperInput" class="wallpaper-input" />
+                <button type="button" class="button" id="chooseLocalWallpaperButton">Choose local wallpaper</button>
+              </div>
+            </div>
+            <div class="settings-section">
+              <h3>Dock</h3>
+              <div class="settings-row settings-toggle-row"><span>Show dock labels</span><label class="toggle-switch"><input type="checkbox" id="dockLabelsToggle" checked /><span class="toggle-slider"></span></label></div>
+              <div class="settings-row settings-toggle-row"><span>Auto-hide dock</span><label class="toggle-switch"><input type="checkbox" id="dockAutoHideToggle" /><span class="toggle-slider"></span></label></div>
+            </div>
+          </div>
+
+          <div class="settings-panel" data-settings-panel="about">
+            <div class="settings-section about-section">
+              <h3>About Archiware</h3>
+              <p>Archiware is a browser-based desktop shell with a Liquid Glass design.</p>
+              <p>Maintained exclusively by Zetsukae.</p>
+              <p>Released under the GPL-3.0 license.</p>
+              <p>Built with vanilla HTML, CSS and JavaScript.</p>
+              <div class="settings-actions">
+                <a class="button" href="https://github.com/SillyFlisy/Archiware" target="_blank" rel="noopener noreferrer">GitHub</a>
+                <button class="button" id="supportButton">Support</button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <section class="window liquid-glass-card is-closed" id="pluberryWindow" data-app-label="Pluberry" aria-label="Pluberry">
+    <div class="window__header finder-header">
+      <div class="window__controls">
+        <button class="window__control window__control--close" data-action="close" aria-label="Close"></button>
+        <button class="window__control window__control--minimize" data-action="minimize" aria-label="Minimize"></button>
+      </div>
+
+      <div class="finder-toolbar">
+        <div class="finder-title">Pluberry</div>
+      </div>
+    </div>
+
+    <div class="window__content finder-content">
+      <div class="pluberry-shell">
+        <div class="pluberry-landing">
+          <h2>Pluberry</h2>
+          <p>Enter your source or choose a popular option below.</p>
+          <label class="pluberry-input-group" for="pluberrySourceInput">
+            <span>Source URL</span>
+            <input class="pluberry-source-input" id="pluberrySourceInput" type="text" placeholder="https://example.com/ or example.com" />
+          </label>
+          <button class="pluberry-launch-button" type="button">Launch Pluberry</button>
+        </div>
+        <iframe class="pluberry-frame" title="Pluberry" src="about:blank"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hidden Text Editor template (not on dock or desktop) -->
+  <section class="window liquid-glass-card is-closed" id="textEditorWindow" data-app-label="Text Editor" aria-label="Text Editor">
+    <div class="window__header finder-header">
+      <div class="window__controls">
+        <button class="window__control window__control--close" data-action="close" aria-label="Close"></button>
+        <button class="window__control window__control--minimize" data-action="minimize" aria-label="Minimize"></button>
+      </div>
+
+      <div class="finder-toolbar">
+        <div class="finder-title">Text Editor</div>
+        <div class="finder-actions">
+          <button class="toolbar-btn" data-action="save">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="window__content finder-content">
+      <div class="finder-layout">
+        <main class="finder-main">
+          <div class="path-bar editor-path">Untitled</div>
+          <div class="editor-area">
+            <textarea class="text-editor" spellcheck="true" placeholder="Start typing..."></textarea>
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <div class="power-overlay hidden" id="powerOverlay" aria-hidden="true">
+    <div class="power-message" id="powerMessage">Off</div>
+  </div>
+
+  <svg class="visually-hidden" width="0" height="0" aria-hidden="true">
+    <defs>
+      <filter id="glass-distortion" x="0%" y="0%" width="100%" height="100%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.025 0.025" numOctaves="2" seed="92" result="noise" />
+        <feGaussianBlur in="noise" stdDeviation="2" result="blurred" />
+        <feDisplacementMap in="SourceGraphic" in2="blurred" scale="65" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </defs>
+  </svg>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>

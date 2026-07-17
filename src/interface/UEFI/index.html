@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArchiwareOS UEFI Setup Utility</title>
+    <link rel="stylesheet" href="uefi.css">
+</head>
+<body>
+    <div class="uefi-screen">
+        <div class="uefi-content">
+            <div class="uefi-header">
+                <div class="uefi-title">ArchiwareOS UEFI Setup Utility</div>
+                <div class="uefi-version">Version 2.8.0 - Build 2025.06</div>
+            </div>
+            
+            <div class="uefi-main">
+                <div class="uefi-menu">
+                    <div class="uefi-tab active" data-tab="main">Main</div>
+                    <div class="uefi-tab" data-tab="advanced">Advanced</div>
+                    <div class="uefi-tab" data-tab="security">Security</div>
+                    <div class="uefi-tab" data-tab="boot">Boot</div>
+                    <div class="uefi-tab" data-tab="exit">Exit</div>
+                </div>
+                
+                <div class="uefi-panel">
+                    
+                    <div class="uefi-tab-content" id="main">
+                        <div class="uefi-section-title">System Information</div>
+                        <div class="uefi-item">
+                            <span class="uefi-label">BIOS Version:</span>
+                            <span class="uefi-value">ArchiwareOS UEFI v2.8.0</span>
+                        </div>
+                        <div class="uefi-item">
+                            <span class="uefi-label">System Date:</span>
+                            <span class="uefi-value" id="uefiDate">--/--/----</span>
+                        </div>
+                        <div class="uefi-item">
+                            <span class="uefi-label">System Time:</span>
+                            <span class="uefi-value" id="uefiTime">--:--:--</span>
+                        </div>
+                        <div class="uefi-item">
+                            <span class="uefi-label">Total Memory:</span>
+                            <span class="uefi-value">32192 MB</span>
+                        </div>
+                    </div>
+
+                    <div class="uefi-tab-content" id="advanced" style="display: none;">
+                        <div class="uefi-section-title">Advanced System Settings</div>
+                        <div class="uefi-item selectable toggleable">
+                            <span class="uefi-label">Intel Virtualization Technology (VT-x):</span>
+                            <span class="uefi-value">[Disabled]</span>
+                        </div>
+                        <div class="uefi-item selectable toggleable">
+                            <span class="uefi-label">Intel Hyper-Threading Technology:</span>
+                            <span class="uefi-value">[Disabled]</span>
+                        </div>
+                        <div class="uefi-item selectable toggleable">
+                            <span class="uefi-label">Fast Boot Support:</span>
+                            <span class="uefi-value">[Enabled]</span>
+                        </div>
+                        <div class="uefi-item selectable toggleable">
+                            <span class="uefi-label">USB Legacy Support:</span>
+                            <span class="uefi-value">[Enabled]</span>
+                        </div>
+                        <div class="uefi-item selectable toggleable">
+                            <span class="uefi-label">Onboard Audio Controller:</span>
+                            <span class="uefi-value">[Enabled]</span>
+                        </div>
+                    </div>
+
+                    <div class="uefi-tab-content" id="security" style="display: none;">
+                        <div class="uefi-section-title">System Security Settings</div>
+                        <div class="uefi-item selectable toggleable">
+                            <span class="uefi-label">Secure Boot Support:</span>
+                            <span class="uefi-value">[Disabled]</span>
+                        </div>
+                        <div class="uefi-item selectable toggleable">
+                            <span class="uefi-label">Intel Platform Trust Technology (TPM 2.0):</span>
+                            <span class="uefi-value">[Enabled]</span>
+                        </div>
+                        <div class="uefi-item selectable" id="btnSupervisorPassword">
+                            <span class="uefi-label">Set Supervisor Password:</span>
+                            <span class="uefi-value">[Not Set]</span>
+                        </div>
+                    </div>
+                    
+                    <div class="uefi-tab-content" id="boot" style="display: none;">
+                        <div class="uefi-section-title">Boot Priority Order</div>
+                        <div class="uefi-item selectable">
+                            <span class="uefi-label">  1. ArchiwareOS AnaisManager</span>
+                        </div>
+                        <div class="uefi-item selectable">
+                            <span class="uefi-label">  2. USB Device MilkyDevice</span>
+                        </div>
+                        <div class="uefi-item selectable">
+                            <span class="uefi-label">  3. Network Boot</span>
+                        </div>
+                    </div>
+                    
+                    <div class="uefi-tab-content" id="exit" style="display: none;">
+                        <div class="uefi-section-title">Exit Options</div>
+                        <div class="uefi-item selectable" onclick="exitUefi()">
+                            <span class="uefi-label">Exit Setup</span>
+                        </div>
+                        <div class="uefi-item selectable" onclick="resetUefi()">
+                            <span class="uefi-label">Load Setup Defaults</span>
+                        </div>
+                        <div class="uefi-item selectable" onclick="exitUefi()">
+                            <span class="uefi-label">Save & Exit</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <div class="uefi-footer">
+                <div class="uefi-help">
+                    <span><kbd>F2</kbd> Setup</span>
+                    <span><kbd>F10</kbd> Save & Exit</span>
+                    <span><kbd>ESC</kbd> Exit</span>
+                    <span><kbd>↑↓</kbd> Select Item</span>
+                    <span><kbd>←→</kbd> Select Tab</span>
+                    <span><kbd>+/-</kbd> Change Boot Order</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="uefi.js"></script>
+</body>
+</html>

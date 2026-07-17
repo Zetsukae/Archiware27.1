@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ArchiwareOS Setup</title>
+    <link rel="stylesheet" href="setup.css" />
+  </head>
+  <body>
+    <div class="ambient ambient--one"></div>
+    <div class="ambient ambient--two"></div>
+
+    <main class="setup-shell">
+      <section class="setup-card" aria-label="Setup wizard">
+        <header class="setup-header">
+          <div>
+            <p class="eyebrow">ArchiwareOS</p>
+            <h1>Initial setup</h1>
+          </div>
+          <div class="step-indicator" id="stepIndicator" aria-label="Setup steps"></div>
+        </header>
+
+        <div class="step-view">
+          <section class="step active" data-step="1">
+            <div class="hero-glow"></div>
+            <div class="step-content">
+              <p class="step-label">Step 1 / 5</p>
+              <h2>Welcome to ArchiwareOS</h2>
+              <p class="step-description">
+                A fast, bright and polished experience designed for calm focus and seamless flow.
+              </p>
+            </div>
+          </section>
+
+          <section class="step" data-step="2">
+            <div class="step-content">
+              <p class="step-label">Step 2 / 7</p>
+              <h2>Legal agreement</h2>
+              <p class="step-description">
+                Review and accept the GPL-3.0 license to continue.
+              </p>
+
+              <div class="legal-card">
+                <pre>
+========================================================
+            ARCHIWARE OS - GPL-3.0 LICENSE
+========================================================
+This software is distributed under the terms of the GNU 
+General Public License version 3 (GPL-3.0).
+
+1. ORIGINAL WORK, CREDITS & INSPIRATION
+-----------------------------
+ArchiwareOS is a modern project based on the original 
+codebase and architecture from the official repository:
+ > https://github.com/SillyFlisy/Archiware
+
+Original Developers & Key Contributors:
+  - SillyFlisy (GitHub: @SillyFlisy)
+  - Zetsukae (GitHub: @Zetsukae)
+
+Visual Design & Styling Credits:
+  - Liquid Glass effects inspired by & incorporating elements 
+    from AetherCSS (https://aethercss.lovable.app/).
+
+All rights to the original codebase and historical structure 
+remain with their respective authors. This "Liquid Glass" 
+visual rewrite and its modules are distributed under the 
+same GPL-3.0 license.
+
+2. KEY TERMS & CONDITIONS
+--------------------------
+- You are free to share, copy, and modify this code.
+- Any derivative work must also remain open-source and 
+  be distributed under this exact same GPL-3.0 license.
+- This software is provided "as is", without warranty of 
+  any kind.
+========================================================
+                </pre>
+              </div>
+
+              <div class="checkbox-row">
+                <label>
+                  <input id="legalAccept" type="checkbox" />
+                  I accept the terms of the GPL-3.0 license.
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <section class="step" data-step="3">
+            <div class="step-content">
+              <p class="step-label">Step 3 / 7</p>
+              <h2>Create your username</h2>
+              <p class="step-description">
+                Choose a display name for your ArchiwareOS profile.
+              </p>
+
+              <div class="glass-input">
+                <label class="field-label" for="username">Username</label>
+                <input id="username" type="text" maxlength="20" placeholder="Enter your name" />
+              </div>
+            </div>
+          </section>
+
+          <section class="step" data-step="4">
+            <div class="step-content">
+              <p class="step-label">Step 4 / 7</p>
+              <h2>Personalize your workspace</h2>
+              <p class="step-description">
+                Fine-tune the experience with a few helpful options.
+              </p>
+
+              <div class="toggle-list">
+                <label class="toggle-row">
+                  <span>
+                    <strong>Auto-drivers <span class="option-label">Recommended</span></strong>
+                    <small>We automatically install the latest drivers for your hardware.</small>
+                  </span>
+                  <button class="toggle" type="button" data-option="advancedEffects" aria-pressed="true"></button>
+                </label>
+
+                <label class="toggle-row">
+                  <span>
+                    <strong>Error reporting</strong>
+                    <small>Help improve stability with anonymous diagnostics.</small>
+                  </span>
+                  <button class="toggle" type="button" data-option="errorReports" aria-pressed="true"></button>
+                </label>
+
+                <label class="toggle-row">
+                  <span>
+                    <strong>Localization</strong>
+                    <small>Use region-aware formatting and language support.</small>
+                  </span>
+                  <button class="toggle" type="button" data-option="localization" aria-pressed="true"></button>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <section class="step" data-step="5">
+            <div class="step-content">
+              <p class="step-label">Step 5 / 7</p>
+              <h2>Connect to the internet</h2>
+              <p class="step-description">
+                Auto-drivers needs a network connection to download and install the latest hardware drivers.
+              </p>
+
+              <div class="connect-card">
+                <p>
+                  Please connect this device to the internet before continuing.
+                </p>
+
+                <div class="wifi-list">
+                  <button class="wifi-network active" type="button" data-network="hxt-29U302">
+                    <span>hxt-29U302</span>
+                    <span class="wifi-status">Secured</span>
+                  </button>
+                  <button class="wifi-network" type="button" data-network="bllw298311">
+                    <span>bllw298311</span>
+                    <span class="wifi-status">Secured</span>
+                  </button>
+                  <button class="wifi-network" type="button" data-network="i have wifi and u not">
+                    <span>i have wifi and u not</span>
+                    <span class="wifi-status">Secured</span>
+                  </button>
+                </div>
+
+                <div class="wifi-actions">
+                  <input class="wifi-password" type="password" placeholder="Password" aria-label="Wi-Fi password" />
+                  <button class="ghost-btn wifi-connect" type="button">Connect</button>
+                </div>
+
+                <p class="wifi-feedback" aria-live="polite">Select a network and enter a password.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="step" data-step="6">
+            <div class="step-content">
+              <p class="step-label">Step 6 / 7</p>
+              <h2>Finalizing your setup</h2>
+              <p class="step-description">
+                A few moments while our system prepares everything for you.
+              </p>
+
+              <div class="progress-card">
+                <div class="progress-bar">
+                  <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="status-text" id="statusText">Preparing your workspace…</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="step" data-step="7">
+            <div class="step-content">
+              <p class="step-label">Step 7 / 7</p>
+              <h2>Everything is ready</h2>
+              <p class="step-description">
+                Your ArchiwareOS experience is now prepared and waiting for the first launch.
+              </p>
+            </div>
+          </section>
+        </div>
+
+        <footer class="setup-actions">
+          <button class="ghost-btn hidden" data-action="back">Back</button>
+          <button class="ghost-btn" data-action="next" id="actionButton">Continue</button>
+        </footer>
+      </section>
+    </main>
+
+    <script src="setup.js"></script>
+  </body>
+</html>

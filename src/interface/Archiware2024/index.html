@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="Assets/icons/archiwareos.png" type="image/png">
+    <title>Archiware - Future Linux-Based OS | Test it on the WEB!</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="boot-screen" id="bootScreen">
+        <div class="boot-content">
+            <div class="boot-logo">
+                <img src="Assets/icons/archiwareos.png" alt="ArchiwareOS" class="boot-logo-img">
+            </div>
+            <div class="boot-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BIOS/UEFI Screen -->
+    <div class="bios-screen" id="biosScreen" style="display: none;">
+        <div class="bios-content">
+            <div class="bios-header">
+                <div class="bios-title">ArchiwareOS UEFI Setup Utility</div>
+                <div class="bios-version">Version 2.1.0 - Build 2024.10</div>
+            </div>
+
+            <div class="bios-main">
+                <div class="bios-menu">
+                    <div class="bios-tab active" data-tab="main">Main</div>
+                    <div class="bios-tab" data-tab="advanced">Advanced</div>
+                    <div class="bios-tab" data-tab="security">Security</div>
+                    <div class="bios-tab" data-tab="boot">Boot</div>
+                    <div class="bios-tab" data-tab="exit">Exit</div>
+                </div>
+
+                <div class="bios-panel">
+                    <div class="bios-tab-content" id="main">
+                        <div class="bios-item">
+                            <span class="bios-label">System Information</span>
+                        </div>
+                        <div class="bios-item">
+                            <span class="bios-label">  BIOS Version:</span>
+                            <span class="bios-value">ArchiwareOS UEFI v2.1.0</span>
+                        </div>
+                        <div class="bios-item">
+                            <span class="bios-label">  System Date:</span>
+                            <span class="bios-value" id="biosDate">18/10/2024</span>
+                        </div>
+                        <div class="bios-item">
+                            <span class="bios-label">  System Time:</span>
+                            <span class="bios-value" id="biosTime">10:25:30</span>
+                        </div>
+                        <div class="bios-item">
+                            <span class="bios-label">  Total Memory:</span>
+                            <span class="bios-value">8192 MB</span>
+                        </div>
+                    </div>
+
+                    <div class="bios-tab-content" id="boot" style="display: none;">
+                        <div class="bios-item">
+                            <span class="bios-label">Boot Priority Order</span>
+                        </div>
+                        <div class="bios-item selectable">
+                            <span class="bios-label">  1. ArchiwareOS (SSD)</span>
+                        </div>
+                        <div class="bios-item selectable">
+                            <span class="bios-label">  2. USB Device</span>
+                        </div>
+                        <div class="bios-item selectable">
+                            <span class="bios-label">  3. Network Boot</span>
+                        </div>
+                    </div>
+
+                    <div class="bios-tab-content" id="exit" style="display: none;">
+                        <div class="bios-item selectable" onclick="exitBios()">
+                            <span class="bios-label">Exit Setup</span>
+                        </div>
+                        <div class="bios-item selectable" onclick="resetBios()">
+                            <span class="bios-label">Load Setup Defaults</span>
+                        </div>
+                        <div class="bios-item selectable" onclick="exitBios()">
+                            <span class="bios-label">Save & Exit</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bios-footer">
+                <div class="bios-help">
+                    <span>F2: Setup</span>
+                    <span>F10: Save & Exit</span>
+                    <span>ESC: Exit</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lockscreen -->
+    <div id="lockscreen" class="lockscreen active">
+        <div class="liquid-bg"></div>
+
+        <div class="lockscreen-content" id="lockscreenContent">
+            <div class="time-display" id="timeDisplay">
+                <div class="time" id="lockTime">10:15</div>
+                <div class="date" id="lockDate">Jeudi 16 Octobre</div>
+            </div>
+
+            <div class="code-entry" id="codeEntry">
+                <input
+                    type="text"
+                    id="codeInput"
+                    class="code-input"
+                    placeholder="Entrez votre code..."
+                    autocomplete="off"
+                    spellcheck="false"
+                />
+                <div class="switch-account-btn" id="switchAccountBtn" onclick="showUserSelection()">
+                    Changer de compte
+                </div>
+                <div class="code-hint">Appuyez sur Entrée pour déverrouiller</div>
+            </div>
+
+
+            <div class="fingerprint-sensor" id="fingerprintSensor">
+                <div class="fingerprint-icon">
+                    <img width="50" height="50" src="https://img.icons8.com/ios/50/FFFFFF/fingerprint--v1.png" alt="fingerprint--v1"/>
+                </div>
+                <div class="fingerprint-text">Touchez le capteur</div>
+            </div>
+
+
+            <div class="user-selection" id="userSelection" style="display: none;">
+                <div class="user-list">
+                    <div class="user-card" onclick="selectUser()">
+                        <div class="user-avatar">
+                            <img id="lockUserProfileImage" src="/placeholder.svg" alt="" style="display: none; width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                            <span id="lockUserAvatarText">Z</span>
+                        </div>
+                        <div class="user-name" id="lockUserName">zetsukae</div>
+                    </div>
+                    <div class="add-user-card" onclick="showNotification('Ajouter un utilisateur - Arrive bientôt !')">
+                        <div class="add-user-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                            </svg>
+                        </div>
+                        <div class="add-user-text">Ajouter un utilisateur</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desktop -->
+    <div id="desktop" class="desktop">
+        <div class="liquid-bg"></div>
+
+        <!-- Left Island -->
+        <div class="island left-island">
+            <div class="user-profile" onclick="toggleUserMenu()">
+                <div class="avatar" id="userAvatar">
+                    <img id="profileImage" src="/placeholder.svg" alt="" style="display: none; width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                    <span id="avatarText">Z</span>
+                </div>
+                <span class="username" id="usernameDisplay">zetsukae</span>
+            </div>
+            <button class="island-btn" onclick="showAppGrid()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"/>
+                    <rect x="14" y="3" width="7" height="7"/>
+                    <rect x="14" y="14" width="7" height="7"/>
+                    <rect x="3" y="14" width="7" height="7"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- User Menu -->
+        <div class="user-menu" id="userMenu">
+            <div class="user-menu-content">
+                <div class="user-menu-header">
+                    <div class="user-menu-avatar">
+                        <img id="menuProfileImage" src="/placeholder.svg" alt="" style="display: none; width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                        <span id="menuAvatarText">Z</span>
+                    </div>
+                    <div class="user-menu-info">
+                        <div class="user-menu-name" id="menuUsername">zetsukae</div>
+                        <div class="user-menu-status" onclick="disconnectUser()" style="cursor: pointer;">Se déconnecter</div>
+                    </div>
+                </div>
+                <div class="user-menu-actions">
+                    <button class="user-menu-btn" onclick="openWindow('settingsWindow'); hideUserMenu()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94L14.4 2.81c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                        </svg>
+                        Paramètres
+                    </button>
+                    <button class="user-menu-btn" onclick="restartSystem()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                        </svg>
+                        Redémarrer
+                    </button>
+                    <button class="user-menu-btn shutdown-btn" onclick="shutdownSystem()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42C17.99 7.86 19 9.81 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.19 1.01-4.14 2.58-5.42L6.17 5.17C4.23 6.82 3 9.26 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z"/>
+                        </svg>
+                        Éteindre
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Island -->
+        <div class="island right-island">
+            <div class="status-icons" onclick="showControlCenter()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/>
+                </svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/>
+                </svg>
+                <span class="time-display" id="topBarTime">10:15</span>
+            </div>
+        </div>
+
+
+        <div class="control-center" id="controlCenter">
+            <div class="control-center-content">
+                <div class="control-center-header">
+                    <h3>Centre de contrôle</h3>
+                    <button class="control-close-btn" onclick="hideControlCenter()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="control-grid">
+                    <div class="control-cards">
+                        <div class="control-card" onclick="toggleWifi()" id="wifiCard">
+                            <div class="control-card-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/>
+                                </svg>
+                            </div>
+                            <div class="control-card-title">Wi-Fi</div>
+                            <div class="control-card-subtitle" id="wifiStatus">Connecté</div>
+                        </div>
+
+                        <div class="control-card" onclick="toggleBluetooth()" id="bluetoothCard">
+                            <div class="control-card-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/>
+                                </svg>
+                            </div>
+                            <div class="control-card-title">Bluetooth</div>
+                            <div class="control-card-subtitle" id="bluetoothStatus">Désactivé</div>
+                        </div>
+                    </div>
+
+                    <div class="control-sliders">
+                        <div class="control-slider-card">
+                            <div class="control-slider-header">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+                                </svg>
+                                <span>Volume</span>
+                                <span id="volumeValue">50%</span>
+                            </div>
+                            <input type="range" class="control-slider" id="volumeSlider" min="0" max="100" value="50">
+                        </div>
+
+                        <div class="control-slider-card">
+                            <div class="control-slider-header">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1z"/>
+                                </svg>
+                                <span>Luminosité</span>
+                                <span id="brightnessValue">100%</span>
+                            </div>
+                            <input type="range" class="control-slider" id="brightnessSlider" min="0" max="100" value="100">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Windows Container -->
+        <div class="windows-container" id="windowsContainer">
+            <!-- Enhanced Settings Window with functional options -->
+<!-- Redesigned Settings window with Ubuntu-style sidebar -->
+<div class="window" id="settingsWindow" style="display: none;">
+  <div class="window-header">
+    <div class="window-title">Paramètres</div>
+    <div class="window-controls">
+      <button class="window-btn minimize-btn">
+        <svg width="12" height="12" viewBox="0 0 12 12">
+          <line x1="2" y1="6" x2="10" y2="6" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
+      <button class="window-btn maximize-btn">
+        <svg width="12" height="12" viewBox="0 0 12 12">
+          <rect x="2" y="2" width="8" height="8" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
+      <button class="window-btn close-btn" onclick="closeWindow('settingsWindow')">
+        <svg width="12" height="12" viewBox="0 0 12 12">
+          <path d="M2 2L10 10M10 2L2 10" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="window-content">
+    <!-- Sidebar navigation - Ubuntu-inspired -->
+    <div class="settings-sidebar">
+      <div class="settings-nav">
+        <div class="settings-nav-item active" onclick="switchSettingsTab('general', this)">Général</div>
+        <div class="settings-nav-item" onclick="switchSettingsTab('appearance', this)">Apparence</div>
+        <div class="settings-nav-item" onclick="switchSettingsTab('personalization', this)">Personnalisation</div>
+        <div class="settings-nav-item" onclick="switchSettingsTab('system', this)">Système</div>
+        <div class="settings-nav-item" onclick="switchSettingsTab('about', this)">À propos</div>
+      </div>
+    </div>
+
+    <!-- Content area with tabbed sections -->
+    <div class="settings-content">
+
+      <!-- General Tab -->
+      <div class="settings-section active" data-tab="general">
+        <h3 class="settings-title">Général</h3>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Nom d'utilisateur</div>
+            <div class="setting-desc">Modifier votre nom d'utilisateur</div>
+          </div>
+          <input type="text" id="usernameInput" value="zetsukae" class="text-input">
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Format de l'heure</div>
+            <div class="setting-desc">Choisir le format d'affichage</div>
+          </div>
+          <select id="timeFormatSelect" class="select-input">
+            <option value="24">24 heures</option>
+            <option value="12">12 heures (AM/PM)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Appearance Tab -->
+      <div class="settings-section" data-tab="appearance">
+        <h3 class="settings-title">Mode sombre</h3>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Thème sombre</div>
+            <div class="setting-desc">Activer le thème sombre</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="darkModeToggle" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <h3 class="settings-title" style="margin-top: 16px;">Animations</h3>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Animations fluides</div>
+            <div class="setting-desc">Animations macOS optimisées</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="animationsToggle" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Transparence</div>
+            <div class="setting-desc">Niveau de glassmorphism</div>
+          </div>
+          <input type="range" id="transparencySlider" min="0" max="100" value="50" class="slider">
+        </div>
+      </div>
+
+      <!-- Personalization Tab -->
+      <div class="settings-section" data-tab="personalization">
+        <h3 class="settings-title">Personnalisation</h3>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Fond d'écran</div>
+            <div class="setting-desc">Changer l'image de fond</div>
+          </div>
+          <input type="file" id="wallpaperInput" accept="image/*" class="file-input" style="display: none;">
+          <button class="settings-btn" onclick="document.getElementById('wallpaperInput').click()">Choisir</button>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Photo de profil</div>
+            <div class="setting-desc">Changer votre avatar</div>
+          </div>
+          <input type="file" id="profileInput" accept="image/*" class="file-input" style="display: none;">
+          <button class="settings-btn" onclick="document.getElementById('profileInput').click()">Choisir</button>
+        </div>
+      </div>
+
+      <!-- System Tab -->
+      <div class="settings-section" data-tab="system">
+        <h3 class="settings-title">Boutons de fenêtre</h3>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Style des boutons</div>
+            <div class="setting-desc">Choisir le style</div>
+          </div>
+          <select id="buttonStyleSelect" class="select-input">
+            <option value="default">Par défaut</option>
+            <option value="simplisme">Simplisme</option>
+          </select>
+        </div>
+
+        <h3 class="settings-title" style="margin-top: 16px;">Système</h3>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Redémarrer</div>
+            <div class="setting-desc">Redémarrer le système</div>
+          </div>
+          <button class="settings-btn" onclick="restartSystem()">Redémarrer</button>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Réinitialiser</div>
+            <div class="setting-desc">Effacer toutes les données</div>
+          </div>
+          <button class="reset-btn" onclick="resetSystem()">Réinitialiser</button>
+        </div>
+      </div>
+
+      <!-- About Tab -->
+      <div class="settings-section" data-tab="about">
+        <h3 class="settings-title">À propos</h3>
+        <div class="about-info">
+          <p>ArchiwareOS</p>
+          <p>Système d'exploitation web moderne</p>
+          <p>Made by Uniware Team, All Rights Reserved.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="resize-handle resize-n"></div>
+  <div class="resize-handle resize-s"></div>
+  <div class="resize-handle resize-e"></div>
+  <div class="resize-handle resize-w"></div>
+  <div class="resize-handle resize-ne"></div>
+  <div class="resize-handle resize-nw"></div>
+  <div class="resize-handle resize-se"></div>
+  <div class="resize-handle resize-sw"></div>
+</div>
+            <!-- Browser Window -->
+            <div class="window" id="browserWindow" style="display: none;">
+                <div class="window-header">
+                    <div class="window-title">Navigateur</div>
+                    <div class="window-controls">
+                        <button class="window-btn minimize-btn">
+                            <svg width="12" height="12" viewBox="0 0 12 12">
+                                <line x1="2" y1="6" x2="10" y2="6" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </button>
+                        <button class="window-btn maximize-btn">
+                            <svg width="12" height="12" viewBox="0 0 12 12">
+                                <rect x="2" y="2" width="8" height="8" fill="none" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </button>
+                        <button class="window-btn close-btn" onclick="closeWindow('browserWindow')">
+                            <svg width="12" height="12" viewBox="0 0 12 12">
+                                <path d="M2 2L10 10M10 2L2 10" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="window-content">
+                    <div class="browser-bar">
+                        <button class="nav-btn" onclick="goBack()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 12H5M12 19l-7-7 7-7"/>
+                            </svg>
+                        </button>
+                        <button class="nav-btn" onclick="goForward()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                        <button class="nav-btn" onclick="refreshPage()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 4v6h6M23 20v-6h-6"/>
+                                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                            </svg>
+                        </button>
+                        <input type="text" class="url-bar" id="urlBar" placeholder="Rechercher ou entrer une URL..." value="https://www.google.com">
+                        <button class="nav-btn" onclick="navigateToUrl()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="M21 21l-4.35-4.35"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="browser-content">
+                        <div id="webview" class="fake-browser">
+                            <div class="fake-site" id="google">
+                                <div class="google-logo">Google</div>
+                                <div class="search-container">
+                                    <input type="text" class="fake-search" placeholder="Rechercher sur Google">
+                                    <button class="search-btn">Rechercher</button>
+                                </div>
+                                <div class="quick-links">
+                                    <a href="#" onclick="loadSite('youtube')">YouTube</a>
+                                    <a href="#" onclick="loadSite('github')">GitHub</a>
+                                    <a href="#" onclick="loadSite('stackoverflow')">Stack Overflow</a>
+                                </div>
+                            </div>
+
+                            <div class="fake-site" id="youtube" style="display:none">
+                                <div class="yt-header">
+                                    <div class="yt-logo">YouTube</div>
+                                    <input type="text" class="yt-search" placeholder="Rechercher">
+                                </div>
+                                <div class="yt-content">
+                                    <div class="video-grid">
+                                        <div class="video-card">
+                                            <div class="video-thumb"></div>
+                                            <div class="video-title">Tutoriel JavaScript</div>
+                                        </div>
+                                        <div class="video-card">
+                                            <div class="video-thumb"></div>
+                                            <div class="video-title">CSS Animations</div>
+                                        </div>
+                                        <div class="video-card">
+                                            <div class="video-thumb"></div>
+                                            <div class="video-title">Web Development</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="fake-site" id="github" style="display:none">
+                                <div class="gh-header">
+                                    <div class="gh-logo">GitHub</div>
+                                    <input type="text" class="gh-search" placeholder="Rechercher des dépôts...">
+                                </div>
+                                <div class="gh-content">
+                                    <div class="repo-list">
+                                        <div class="repo-item">
+                                            <div class="repo-name">archiware/os</div>
+                                            <div class="repo-desc">Système d'exploitation web moderne</div>
+                                        </div>
+                                        <div class="repo-item">
+                                            <div class="repo-name">user/awesome-project</div>
+                                            <div class="repo-desc">Un projet incroyable</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="fake-site" id="stackoverflow" style="display:none">
+                                <div class="so-header">
+                                    <div class="so-logo">Stack Overflow</div>
+                                    <input type="text" class="so-search" placeholder="Rechercher...">
+                                </div>
+                                <div class="so-content">
+                                    <div class="question-list">
+                                        <div class="question-item">
+                                            <div class="question-title">Comment créer une animation CSS ?</div>
+                                            <div class="question-tags">
+                                                <span class="tag">css</span>
+                                                <span class="tag">animation</span>
+                                            </div>
+                                        </div>
+                                        <div class="question-item">
+                                            <div class="question-title">JavaScript async/await expliqué</div>
+                                            <div class="question-tags">
+                                                <span class="tag">javascript</span>
+                                                <span class="tag">async</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="resize-handle resize-n"></div>
+                <div class="resize-handle resize-s"></div>
+                <div class="resize-handle resize-e"></div>
+                <div class="resize-handle resize-w"></div>
+                <div class="resize-handle resize-ne"></div>
+                <div class="resize-handle resize-nw"></div>
+                <div class="resize-handle resize-se"></div>
+                <div class="resize-handle resize-sw"></div>
+            </div>
+        </div>
+
+        <!-- Dock -->
+        <div class="dock">
+            <div class="dock-container">
+                <button class="dock-icon" onclick="openWindow('browserWindow')" title="Navigateur">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" fill="none" stroke="white" stroke-width="1.5"/>
+                    </svg>
+                </button>
+
+                <button class="dock-icon" onclick="showNotification('Messages - Arrive bientôt !')" title="Messages">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                    </svg>
+                </button>
+
+                <button class="dock-icon" onclick="showNotification('Photos - Arrive bientôt !')" title="Photos">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                    </svg>
+                </button>
+
+                <button class="dock-icon" onclick="showNotification('Musique - Arrive bientôt !')" title="Musique">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                    </svg>
+                </button>
+
+                <button class="dock-icon" onclick="openWindow('settingsWindow')" title="Paramètres">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94L14.4 2.81c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                    </svg>
+                </button>
+
+                <button class="dock-icon" onclick="showNotification('App Store - Arrive bientôt !')" title="App Store">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5.97 4.06L14.09 8l-1.06.94L12 7.4l-1.03 1.54L9.91 8l1.06-.94L9.5 5.5l1.47.53L12 4.56l1.03 1.47 1.47-.53-1.47 1.56zm-5.78 9.69L6 13l3.75-1.5L12 9l2.25 2.5L18 13l-1.25 3.75-3.75 1.5L12 21l-1.25-2.75-3.75-1.5z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
