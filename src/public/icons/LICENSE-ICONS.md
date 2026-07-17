@@ -8,6 +8,10 @@ ArchiwareOS are proprietary and are strictly excluded
 from the GNU General Public License v3.0 applied to 
 the software's code.
 
+The folder "thirdparty" is not covered by this license
+notice and may contain third-party assets governed by
+separate terms.
+
 TERMS OF USE:
 - You are NOT allowed to copy, redistribute, modify, 
   sub-license, or reuse these icons in any other project 

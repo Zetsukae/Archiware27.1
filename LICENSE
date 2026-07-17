@@ -31,6 +31,10 @@ ArchiwareOS (specifically those located within the assets
 or icon directories) are proprietary and are NOT covered 
 by the GPL-3.0 license.
 
+The folder "thirdparty" is not covered by this license
+notice and may contain third-party assets governed by
+separate terms.
+
 - These visual assets are: Copyright © 2026 Zetsukae. 
   All Rights Reserved.
 - You are NOT allowed to redistribute, modify, sub-license, 
