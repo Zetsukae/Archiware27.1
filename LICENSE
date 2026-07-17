@@ -1,0 +1,33 @@
+========================================================
+            ARCHIWARE OS - GPL-3.0 LICENSE
+========================================================
+This software is distributed under the terms of the GNU 
+General Public License version 3 (GPL-3.0).
+
+1. ORIGINAL WORK, CREDITS & INSPIRATION
+-----------------------------
+ArchiwareOS is a modern project based on the original 
+codebase and architecture from the official repository:
+ > https://github.com/SillyFlisy/Archiware
+
+Original Developers & Key Contributors:
+  - SillyFlisy (GitHub: @SillyFlisy)
+  - Zetsukae (GitHub: @Zetsukae)
+
+Visual Design & Styling Credits:
+  - Liquid Glass effects inspired by & incorporating elements 
+    from AetherCSS (https://aethercss.lovable.app/).
+
+All rights to the original codebase and historical structure 
+remain with their respective authors. This "Liquid Glass" 
+visual rewrite and its modules are distributed under the 
+same GPL-3.0 license.
+
+2. KEY TERMS & CONDITIONS
+--------------------------
+- You are free to share, copy, and modify this code.
+- Any derivative work must also remain open-source and 
+  be distributed under this exact same GPL-3.0 license.
+- This software is provided "as is", without warranty of 
+  any kind.
+========================================================

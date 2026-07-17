@@ -186,6 +186,26 @@ const handleNotificationHover = (event) => {
 
 document.addEventListener('mousemove', handleNotificationHover);
 
+const clearAllNotifications = () => {
+  activeNotifications.forEach((entry) => {
+    if (entry?.timeoutId) {
+      window.clearTimeout(entry.timeoutId);
+    }
+  });
+  activeNotifications.length = 0;
+  notificationCenter.classList.remove('is-open');
+  notificationCenter.innerHTML = '';
+  notificationStack.innerHTML = '';
+  updateNotificationStack();
+};
+
+const handleNotificationsDisabled = () => {
+  clearAllNotifications();
+};
+
+window.addEventListener('archiware:notifications-disabled', handleNotificationsDisabled);
+document.addEventListener('archiware:notifications-disabled', handleNotificationsDisabled);
+
 const dismissNotification = (card, id) => {
   const index = activeNotifications.findIndex((item) => item.id === id);
   if (index >= 0) {
@@ -261,7 +281,7 @@ const updateNotificationStack = () => {
 
 const showNotification = (message, options = {}) => {
   const { title = 'Archiware', timeout = 3200, force = false } = options;
-  if (!force && !appSettings.notifications) return null;
+  if (!appSettings.notifications) return null;
 
   const key = getNotificationKey(title, message);
   const existingEntry = activeNotifications.find((item) => item.key === key);

@@ -227,12 +227,7 @@ export const initSettingsWindow = (windowEl) => {
     notificationsToggle.addEventListener('change', (event) => {
       appSettings.notifications = event.target.checked;
       saveAppSettings();
-      if (appSettings.notifications) {
-        const notificationRoot = window.document.body;
-        if (notificationRoot) {
-          notificationRoot.dispatchEvent(new CustomEvent('archiware:notifications-enabled'));
-        }
-      }
+      window.dispatchEvent(new CustomEvent(appSettings.notifications ? 'archiware:notifications-enabled' : 'archiware:notifications-disabled', { bubbles: true }));
     });
   }
 
