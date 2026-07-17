@@ -1,5 +1,9 @@
 let isLocked = true
 let isBooting = true
+let f2SpamDetected = false
+let bootSequenceTimeoutId = null
+let bootSequenceHideTimeoutId = null
+let uefiRedirectTimeoutId = null
 const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
 let use24HourFormat = true
 const notificationQueue = []
@@ -46,25 +50,73 @@ function loadSettings() {
 }
 
 
+function clearBootSequenceTimers() {
+  if (bootSequenceTimeoutId) {
+    clearTimeout(bootSequenceTimeoutId)
+    bootSequenceTimeoutId = null
+  }
+
+  if (bootSequenceHideTimeoutId) {
+    clearTimeout(bootSequenceHideTimeoutId)
+    bootSequenceHideTimeoutId = null
+  }
+
+  if (uefiRedirectTimeoutId) {
+    clearTimeout(uefiRedirectTimeoutId)
+    uefiRedirectTimeoutId = null
+  }
+}
+
+function redirectToUefiAfterDelay() {
+  const bootScreen = document.getElementById("bootScreen")
+  if (bootScreen) {
+    bootScreen.classList.add("hidden")
+  }
+
+  clearBootSequenceTimers()
+  isBooting = false
+
+  uefiRedirectTimeoutId = setTimeout(() => {
+    window.location.replace("../UEFI/index.html")
+  }, 2000)
+}
+
 function startBootSequence() {
   const bootScreen = document.getElementById("bootScreen")
+
+  clearBootSequenceTimers()
+  f2SpamDetected = false
+  isBooting = true
 
   // Play startup sound
   playSound("Assets/UI Sounds/startup.mp3")
 
-  setTimeout(() => {
-    if (!f2Pressed) {
-      bootScreen.classList.add("hidden")
-      setTimeout(() => {
-        if (!f2Pressed) {
-          bootScreen.style.display = "none"
-          isBooting = false
-
-          const lockscreen = document.getElementById("lockscreen")
-          lockscreen.classList.add("active")
-        }
-      }, 1000)
+  bootSequenceTimeoutId = setTimeout(() => {
+    if (f2SpamDetected) {
+      redirectToUefiAfterDelay()
+      return
     }
+
+    if (bootScreen) {
+      bootScreen.classList.add("hidden")
+    }
+
+    bootSequenceHideTimeoutId = setTimeout(() => {
+      if (f2SpamDetected) {
+        redirectToUefiAfterDelay()
+        return
+      }
+
+      if (bootScreen) {
+        bootScreen.style.display = "none"
+      }
+      isBooting = false
+
+      const lockscreen = document.getElementById("lockscreen")
+      if (lockscreen) {
+        lockscreen.classList.add("active")
+      }
+    }, 1000)
   }, 4000)
 }
 
@@ -136,9 +188,9 @@ document.addEventListener("DOMContentLoaded", () => {
 document.addEventListener("keydown", (e) => {
   if (e.key === "F2" && isBooting) {
     e.preventDefault()
+    e.stopPropagation()
 
-
-    window.location.href = "../UEFI/index.html"
+    f2SpamDetected = true
   }
 })
 

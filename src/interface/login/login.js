@@ -10,6 +10,23 @@ const loginTime = document.getElementById('loginTime');
 const userAvatarImg = document.getElementById('userAvatarImg');
 const userName = document.getElementById('userName');
 
+const bootSequenceState = {
+  active: false,
+  f2Pressed: false,
+};
+
+const handleBootSequenceKey = (event) => {
+  if (!bootSequenceState.active) return;
+  if (event.key === 'F2') {
+    event.preventDefault();
+    event.stopPropagation();
+    bootSequenceState.f2Pressed = true;
+  }
+};
+
+document.addEventListener('keydown', handleBootSequenceKey);
+window.addEventListener('keydown', handleBootSequenceKey);
+
 const resolveAvatarUrl = (avatarValue) => {
   if (!avatarValue) return '';
   if (avatarValue.startsWith('data:') || avatarValue.startsWith('http://') || avatarValue.startsWith('https://') || avatarValue.startsWith('blob:')) {
@@ -217,6 +234,8 @@ const runPowerSequence = (mode, options = {}) => {
   const shouldWaitForKey = options.waitForKey || false;
   const delay = mode === 'shutdown' ? 120 : 140;
   
+  bootSequenceState.active = true;
+  bootSequenceState.f2Pressed = false;
   powerOverlay.classList.add('visible');
   powerLog.innerHTML = '';
   
@@ -240,6 +259,14 @@ const runPowerSequence = (mode, options = {}) => {
           document.addEventListener('keydown', handleKeyForShutdown);
           window.addEventListener('keydown', handleKeyForShutdown);
         } else {
+          if (bootSequenceState.f2Pressed) {
+            bootSequenceState.active = false;
+            setTimeout(() => {
+              window.location.replace('../UEFI/index.html');
+            }, 2000);
+            return;
+          }
+          bootSequenceState.active = false;
           setTimeout(() => {
             powerOverlay.classList.remove('visible');
           }, 3000);
