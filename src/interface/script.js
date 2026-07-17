@@ -59,6 +59,23 @@ if (hasCompletedSetup && !isLoginPage && !isSetupPage && isDesktopShellPage && !
   window.location.replace('./login/');
 }
 
+const getProjectRootUrl = () => {
+  const pathname = window.location.pathname;
+  const srcIndex = pathname.indexOf('/src/');
+  if (srcIndex !== -1) {
+    const rootPath = pathname.slice(0, srcIndex) || '/';
+    return new URL(rootPath.endsWith('/') ? rootPath : `${rootPath}/`, window.location.href).href;
+  }
+  return new URL('./', window.location.href).href;
+};
+
+const getUefiUrl = () => new URL('src/interface/UEFI/index.html', getProjectRootUrl()).href;
+const redirectToUefiWithDelay = (delayMs = 1500) => {
+  setTimeout(() => {
+    window.location.replace(getUefiUrl());
+  }, delayMs);
+};
+
 const redirectToLogin = (target = './login/') => {
   localStorage.setItem('archiware_session_active', 'false');
   window.location.href = target;
@@ -827,6 +844,18 @@ const runPowerSequence = (mode, options = {}) => {
   const shouldWaitForKey = options.waitForKey === true;
   showPowerOverlay();
 
+  let f2Pressed = false;
+  const handlePowerSequenceKey = (event) => {
+    if (event.key !== 'F2') return;
+    event.preventDefault();
+    event.stopPropagation();
+    f2Pressed = true;
+    document.removeEventListener('keydown', handlePowerSequenceKey);
+    window.removeEventListener('keydown', handlePowerSequenceKey);
+  };
+  document.addEventListener('keydown', handlePowerSequenceKey);
+  window.addEventListener('keydown', handlePowerSequenceKey);
+
   if (powerTitle) {
     powerTitle.textContent = '';
   }
@@ -875,10 +904,20 @@ const runPowerSequence = (mode, options = {}) => {
           powerLog.scrollTop = 0;
         }
 
+        document.removeEventListener('keydown', handlePowerSequenceKey);
+        window.removeEventListener('keydown', handlePowerSequenceKey);
+
+        if (f2Pressed) {
+          hidePowerOverlay();
+          window.location.replace(getUefiUrl());
+          return;
+        }
+
         if (shouldWaitForKey) {
           const resumeSequence = (event) => {
             if (event.repeat) return;
             document.removeEventListener('keydown', resumeSequence);
+            window.removeEventListener('keydown', resumeSequence);
             runPowerSequence('shutdown');
           };
           document.addEventListener('keydown', resumeSequence, { once: true });
@@ -895,6 +934,16 @@ const runPowerSequence = (mode, options = {}) => {
           powerLog.innerHTML = '';
           powerLog.scrollTop = 0;
         }
+
+        document.removeEventListener('keydown', handlePowerSequenceKey);
+        window.removeEventListener('keydown', handlePowerSequenceKey);
+
+        if (f2Pressed) {
+          hidePowerOverlay();
+          redirectToUefiWithDelay(1500);
+          return;
+        }
+
         setTimeout(() => {
           hidePowerOverlay();
           redirectToLogin();

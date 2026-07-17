@@ -5,6 +5,24 @@ let bootSequenceTimeoutId = null
 let bootSequenceHideTimeoutId = null
 let uefiRedirectTimeoutId = null
 const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+
+function getProjectRootUrl() {
+  const pathname = window.location.pathname
+  const srcIndex = pathname.indexOf('/src/')
+  if (srcIndex !== -1) {
+    const rootPath = pathname.slice(0, srcIndex) || '/'
+    return new URL(rootPath.endsWith('/') ? rootPath : `${rootPath}/`, window.location.href).href
+  }
+  return new URL('./', window.location.href).href
+}
+
+function getUefiUrl() {
+  return new URL('src/interface/UEFI/index.html', getProjectRootUrl()).href
+}
+
+function redirectToUefiInstantly() {
+  window.location.replace(getUefiUrl())
+}
 let use24HourFormat = true
 const notificationQueue = []
 let isNotificationShowing = false
@@ -76,9 +94,7 @@ function redirectToUefiAfterDelay() {
   clearBootSequenceTimers()
   isBooting = false
 
-  uefiRedirectTimeoutId = setTimeout(() => {
-    window.location.replace("../UEFI/index.html")
-  }, 2000)
+  redirectToUefiInstantly()
 }
 
 function startBootSequence() {

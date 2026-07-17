@@ -29,7 +29,7 @@ function exitUefi() {
 
   if (firstBootOption.includes('usb')) {
 
-    showLoadingScreen("Booting from USB Device...")
+    showLoadingScreen("Booting from USB Device MilkyDevice...")
     setTimeout(() => {
 
       window.location.href = '../Archiware2024/index.html';
@@ -52,7 +52,7 @@ function exitUefi() {
   }
   else {
 
-    showLoadingScreen("Loading ArchiwareOS...")
+    showLoadingScreen("Booting ArchiwareOS...")
     setTimeout(() => {
       localStorage.setItem('show_boot_after_uefi', 'true')
       localStorage.setItem('archiware_session_active', 'false')

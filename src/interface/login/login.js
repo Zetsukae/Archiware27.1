@@ -51,6 +51,13 @@ const getProjectRootUrl = () => {
   return new URL('./', window.location.href).href;
 };
 
+const getUefiUrl = () => new URL('src/interface/UEFI/index.html', getProjectRootUrl()).href;
+const redirectToUefiWithDelay = (delayMs = 1500) => {
+  setTimeout(() => {
+    window.location.replace(getUefiUrl());
+  }, delayMs);
+};
+
 const resolveWallpaperUrl = (wallpaperValue) => {
   if (!wallpaperValue) {
     return new URL('src/public/wallpapers/wallpaper.png', getProjectRootUrl()).href;
@@ -240,12 +247,24 @@ const runPowerSequence = (mode, options = {}) => {
   powerLog.innerHTML = '';
   
   let lineIndex = 0;
+  const handlePowerSequenceKey = (event) => {
+    if (event.key !== 'F2') return;
+    event.preventDefault();
+    event.stopPropagation();
+    bootSequenceState.f2Pressed = true;
+    document.removeEventListener('keydown', handlePowerSequenceKey);
+    window.removeEventListener('keydown', handlePowerSequenceKey);
+  };
+  document.addEventListener('keydown', handlePowerSequenceKey);
+  window.addEventListener('keydown', handlePowerSequenceKey);
   
   const revealNextLine = () => {
     if (lineIndex >= bootSequenceLines.length) {
       setTimeout(() => {
         powerLog.innerHTML = '';
         powerLog.scrollTop = 0;
+        document.removeEventListener('keydown', handlePowerSequenceKey);
+        window.removeEventListener('keydown', handlePowerSequenceKey);
         if (shouldWaitForKey) {
           // Wait for key press
           const handleKeyForShutdown = () => {
@@ -261,9 +280,7 @@ const runPowerSequence = (mode, options = {}) => {
         } else {
           if (bootSequenceState.f2Pressed) {
             bootSequenceState.active = false;
-            setTimeout(() => {
-              window.location.replace('../UEFI/index.html');
-            }, 2000);
+            redirectToUefiWithDelay(1500);
             return;
           }
           bootSequenceState.active = false;
