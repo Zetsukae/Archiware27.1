@@ -22,12 +22,12 @@
       </div>
       <div class="profile-section">
         <p class="section-title">Quick Access</p>
-        <button class="profile-button" id="quickFilesBtn" type="button">Files</button>
+        <button class="profile-button" id="quickLogOutBtn" type="button">Log Out</button>
       </div>
       <div class="profile-section">
         <p class="section-title">Power</p>
-        <button class="profile-button" id="powerOffBtn">Shut Down</button>
-        <button class="profile-button" id="restartBtn">Restart</button>
+        <button class="profile-button" id="powerOffBtn">Shutdown</button>
+        <button class="profile-button" id="restartBtn">Reboot</button>
       </div>
     </div>
 
@@ -128,21 +128,25 @@
 
     <nav class="dock liquid-glass-card dock-card" aria-label="Dock">
       <div class="dock__inner">
-        <button class="dock__item" data-menu="osLauncher" aria-label="Applications">
-          <img src="../public/icons/app.svg" alt="Applications" />
-        </button>
-        <button class="dock__item" data-app="explorer" aria-label="Explorer">
-          <img src="../public/icons/explorer.svg" alt="Explorer" />
-        </button>
-        <button class="dock__item" data-app="settings" aria-label="Settings">
-          <img src="../public/icons/settings.svg" alt="Settings" />
-        </button>
-        <button class="dock__item" data-app="browser" aria-label="Browser">
-          <img src="../public/icons/browser.svg" alt="Browser" />
-        </button>
-        <button class="dock__item" data-app="music" aria-label="Music">
-          <img src="../public/icons/music.svg" alt="Music" />
-        </button>
+        <div class="dock__group dock__group--pinned">
+          <button class="dock__item" data-menu="osLauncher" aria-label="Applications">
+            <img src="../public/icons/app.svg" alt="Applications" />
+          </button>
+          <button class="dock__item" data-app="explorer" aria-label="Explorer">
+            <img src="../public/icons/explorer.svg" alt="Explorer" />
+          </button>
+          <button class="dock__item" data-app="settings" aria-label="Settings">
+            <img src="../public/icons/settings.svg" alt="Settings" />
+          </button>
+          <button class="dock__item" data-app="browser" aria-label="Browser">
+            <img src="../public/icons/browser.svg" alt="Browser" />
+          </button>
+          <button class="dock__item" data-app="music" aria-label="Music">
+            <img src="../public/icons/music.svg" alt="Music" />
+          </button>
+        </div>
+        <div class="dock__separator is-hidden" aria-hidden="true"></div>
+        <div class="dock__group dock__group--running is-empty" id="runningDockApps"></div>
       </div>
     </nav>
 
@@ -355,7 +359,10 @@
   </section>
 
   <div class="power-overlay hidden" id="powerOverlay" aria-hidden="true">
-    <div class="power-message" id="powerMessage">Off</div>
+    <div class="power-screen">
+      <div class="power-title" id="powerTitle">Shutting down</div>
+      <div class="power-log" id="powerLog"></div>
+    </div>
   </div>
 
   <svg class="visually-hidden" width="0" height="0" aria-hidden="true">

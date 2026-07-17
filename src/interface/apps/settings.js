@@ -1,4 +1,17 @@
-const wallpaperBasePath = '../public/wallpapers/';
+const getProjectRootUrl = () => {
+  const pathname = window.location.pathname;
+  const srcIndex = pathname.indexOf('/src/');
+  if (srcIndex !== -1) {
+    const rootPath = pathname.slice(0, srcIndex) || '/';
+    return new URL(rootPath.endsWith('/') ? rootPath : `${rootPath}/`, window.location.href).href;
+  }
+  return new URL('./', window.location.href).href;
+};
+
+const getWallpaperAssetUrl = (fileName) => {
+  return new URL(`src/public/wallpapers/${fileName}`, getProjectRootUrl()).href;
+};
+
 const availableWallpapers = [
   { file: 'wallpaper.png', label: 'Default' },
   { file: 'Archiware24.jpeg', label: 'Archiware 24' }
@@ -65,9 +78,11 @@ export const applyWallpaper = (fileName) => {
 
     if (fileName === 'custom' && appSettings.customWallpaper) {
       body.style.backgroundImage = `url("${appSettings.customWallpaper}")`;
+      localStorage.setItem('archiware_wallpaper', appSettings.customWallpaper);
     } else {
-      const path = `${wallpaperBasePath}${fileName}`;
+      const path = getWallpaperAssetUrl(fileName);
       body.style.backgroundImage = `url("${path}")`;
+      localStorage.setItem('archiware_wallpaper', path);
     }
     appSettings.wallpaper = fileName;
     saveAppSettings();
@@ -90,6 +105,7 @@ export const applyCustomWallpaper = (file) => {
   reader.onload = (event) => {
     const dataUrl = event.target.result;
     appSettings.customWallpaper = dataUrl;
+    localStorage.setItem('archiware_wallpaper', dataUrl);
     applyWallpaper('custom');
     saveAppSettings();
   };
@@ -144,7 +160,7 @@ export const renderWallpaperOptions = (container) => {
     thumb.className = 'wallpaper-thumb';
     thumb.dataset.wallpaperFile = wallpaper.file;
     thumb.innerHTML = `
-      <img src="${wallpaperBasePath}${wallpaper.file}" alt="${wallpaper.label}" />
+      <img src="${getWallpaperAssetUrl(wallpaper.file)}" alt="${wallpaper.label}" />
       <span>${wallpaper.label}</span>
     `;
     thumb.addEventListener('click', () => {

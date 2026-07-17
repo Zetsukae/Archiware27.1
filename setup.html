@@ -56,14 +56,54 @@
           <section class="step" data-step="3">
             <div class="step-content">
               <p class="step-label">Step 3 / 7</p>
-              <h2>Create your username</h2>
+              <h2>Create your profile</h2>
               <p class="step-description">
-                Choose a display name for your ArchiwareOS profile.
+                Choose a display name, password, and avatar for your ArchiwareOS profile.
               </p>
 
+              <div class="username-row">
+                <div class="glass-input">
+                  <label class="field-label" for="username">Username</label>
+                  <input id="username" type="text" maxlength="20" placeholder="Enter your name" />
+                </div>
+                <div class="avatar-button-wrapper">
+                  <button id="avatarButton" class="avatar-button" type="button" title="Choose avatar">
+                    <img id="avatarPreview" src="src/public/avatars/happy_avatar.svg" alt="Avatar" />
+                  </button>
+                  <div id="avatarPicker" class="avatar-picker hidden">
+                    <button class="avatar-picker-option" data-avatar="happy_avatar.svg" type="button">
+                      <img src="src/public/avatars/happy_avatar.svg" alt="Happy" />
+                    </button>
+                    <button class="avatar-picker-option" data-avatar="neutral_avatar.svg" type="button">
+                      <img src="src/public/avatars/neutral_avatar.svg" alt="Neutral" />
+                    </button>
+                    <button class="avatar-picker-option" data-avatar="sad_avatar.svg" type="button">
+                      <img src="src/public/avatars/sad_avatar.svg" alt="Sad" />
+                    </button>
+                    <button class="avatar-picker-option" data-avatar="undefined_avatar.svg" type="button">
+                      <img src="src/public/avatars/undefined_avatar.svg" alt="Undefined" />
+                    </button>
+                    <button id="customAvatarButton" class="avatar-picker-option avatar-picker-custom" type="button" title="Upload custom avatar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                      </svg>
+                    </button>
+                    <input id="customAvatarInput" type="file" accept="image/*" hidden />
+                  </div>
+                </div>
+              </div>
+
               <div class="glass-input">
-                <label class="field-label" for="username">Username</label>
-                <input id="username" type="text" maxlength="20" placeholder="Enter your name" />
+                <label class="field-label" for="password">Password</label>
+                <input id="password" type="password" maxlength="64" placeholder="Enter a strong password" />
+                <div class="password-strength">
+                  <div class="password-strength-bar">
+                    <div class="password-strength-fill" id="strengthFill"></div>
+                  </div>
+                  <p class="password-strength-text" id="strengthText">Password strength: —</p>
+                </div>
               </div>
             </div>
           </section>

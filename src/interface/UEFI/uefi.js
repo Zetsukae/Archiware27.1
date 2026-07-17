@@ -55,7 +55,8 @@ function exitUefi() {
     showLoadingScreen("Loading ArchiwareOS...")
     setTimeout(() => {
       localStorage.setItem('show_boot_after_uefi', 'true')
-      window.location.href = '../index.html'
+      localStorage.setItem('archiware_session_active', 'false')
+      window.location.href = '../login/'
     }, 2000)
   }
 }

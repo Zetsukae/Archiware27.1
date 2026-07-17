@@ -9,10 +9,24 @@ const progressFill = document.getElementById('progressFill');
 const statusText = document.getElementById('statusText');
 
 const params = new URLSearchParams(window.location.search);
+const resolveAvatarUrl = (avatarValue) => {
+  if (!avatarValue) return '';
+  if (avatarValue.startsWith('data:') || avatarValue.startsWith('http://') || avatarValue.startsWith('https://') || avatarValue.startsWith('blob:')) {
+    return avatarValue;
+  }
+  if (avatarValue.startsWith('/')) {
+    return `${window.location.origin}${avatarValue}`;
+  }
+  if (avatarValue.includes('/')) {
+    return avatarValue;
+  }
+  return new URL(`src/public/avatars/${avatarValue}`, window.location.href).href;
+};
+
 const shouldSkipSetup = localStorage.getItem('archiware_setup_complete') === 'true' && params.get('reset') !== '1';
 
 if (shouldSkipSetup) {
-  window.location.replace('src/interface/index.html');
+  window.location.replace('src/interface/login/');
 }
 
 // Disable context menu for better experience
@@ -23,7 +37,9 @@ document.addEventListener('contextmenu', (event) => {
 const state = {
   currentStep: 1,
   username: '',
-  avatar: 'avatar-1',
+  password: '',
+  passwordStrength: 0,
+  avatar: 'happy_avatar.svg',
   options: {},
   requiresInternet: false,
   legalAccepted: false,
@@ -90,6 +106,7 @@ const renderButtons = () => {
   const isStepTwo = state.currentStep === 2;
   const isStepThree = state.currentStep === 3;
   const usernameMissing = isStepThree && !state.username;
+  const passwordTooWeak = isStepThree && state.passwordStrength < 2;
   const legalMissing = isStepTwo && !state.legalAccepted;
   const licenseStillLoading = isStepTwo && !state.legalLoaded;
 
@@ -116,7 +133,7 @@ const renderButtons = () => {
   } else {
     actionButton.textContent = 'Continue';
     actionButton.setAttribute('data-action', 'next');
-    actionButton.disabled = legalMissing || usernameMissing;
+    actionButton.disabled = legalMissing || usernameMissing || passwordTooWeak;
   }
 };
 
@@ -142,6 +159,10 @@ const handleNext = () => {
 
   if (state.currentStep === 3) {
     if (!state.username) {
+      return;
+    }
+
+    if (state.passwordStrength < 2) {
       return;
     }
 
@@ -189,8 +210,10 @@ const handleFinish = () => {
   }
 
   localStorage.setItem('archiware_username', state.username || 'Guest');
-  localStorage.setItem('archiware_profile', state.avatar);
+  localStorage.setItem('archiware_password', state.password || '');
+  localStorage.setItem('archiware_profile', resolveAvatarUrl(state.avatar));
   localStorage.setItem('archiware_setup_complete', 'true');
+  localStorage.setItem('archiware_session_active', 'false');
   localStorage.setItem('archiware_effects_enabled', String(state.options.advancedEffects));
   localStorage.setItem('archiware_error_reports', String(state.options.errorReports));
   localStorage.setItem('archiware_localization', String(state.options.localization));
@@ -205,7 +228,7 @@ const handleFinish = () => {
     });
 
     setTimeout(() => {
-      window.location.href = 'src/interface/index.html';
+      window.location.href = 'src/interface/login/';
     }, 5000);
   }, 2000);
 };
@@ -246,6 +269,133 @@ if (usernameInput) {
     renderButtons();
   });
 }
+
+const calculatePasswordStrength = (password) => {
+  if (!password) return 0;
+  let strength = 0;
+  if (password.length >= 8) strength++;
+  if (password.length >= 12) strength++;
+  if (/[a-z]/.test(password)) strength++;
+  if (/[A-Z]/.test(password)) strength++;
+  if (/[0-9]/.test(password)) strength++;
+  if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>?]/.test(password)) strength++;
+  return Math.min(strength, 5);
+};
+
+const updatePasswordStrength = () => {
+  const strengthFill = document.getElementById('strengthFill');
+  const strengthText = document.getElementById('strengthText');
+  if (!strengthFill || !strengthText) return;
+
+  const strength = state.passwordStrength;
+  const fills = ['—', '🔴 Weak', '🟠 Fair', '🟡 Good', '🟢 Strong', '💚 Very Strong'];
+  const colors = ['transparent', '#ff4444', '#ff8800', '#ffcc00', '#88cc00', '#00dd00'];
+
+  strengthText.textContent = `Password strength: ${fills[strength]}`;
+  strengthFill.style.width = `${(strength / 5) * 100}%`;
+  strengthFill.style.background = colors[strength];
+};
+
+const passwordInput = document.getElementById('password');
+if (passwordInput) {
+  passwordInput.addEventListener('input', (event) => {
+    state.password = event.target.value;
+    state.passwordStrength = calculatePasswordStrength(state.password);
+    updatePasswordStrength();
+    renderButtons();
+  });
+}
+
+// Avatar selection
+const resizeAvatarToDataUrl = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const image = new Image();
+      image.onload = () => {
+        const maxSize = 256;
+        const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
+        const width = Math.max(1, Math.round(image.width * scale));
+        const height = Math.max(1, Math.round(image.height * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext('2d');
+        context.drawImage(image, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/png', 0.9));
+      };
+      image.onerror = reject;
+      image.src = event.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
+const initializeAvatarSelection = () => {
+  const avatarButton = document.getElementById('avatarButton');
+  const avatarPicker = document.getElementById('avatarPicker');
+  const avatarPreview = document.getElementById('avatarPreview');
+  const customAvatarButton = document.getElementById('customAvatarButton');
+  const customAvatarInput = document.getElementById('customAvatarInput');
+  const avatarPickerOptions = Array.from(
+    document.querySelectorAll('.avatar-picker-option:not(.avatar-picker-custom)')
+  );
+
+  if (!avatarButton || !avatarPicker) return;
+
+  if (avatarPickerOptions.length > 0) {
+    avatarPickerOptions[0].classList.add('active');
+    state.avatar = resolveAvatarUrl(avatarPickerOptions[0].dataset.avatar);
+    avatarPreview.src = resolveAvatarUrl(avatarPickerOptions[0].dataset.avatar);
+  }
+
+  avatarButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    avatarPicker.classList.toggle('hidden');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.target !== avatarButton && !avatarPicker.contains(e.target)) {
+      avatarPicker.classList.add('hidden');
+    }
+  });
+
+  avatarPickerOptions.forEach((button) => {
+    button.addEventListener('click', () => {
+      avatarPickerOptions.forEach((btn) => btn.classList.remove('active'));
+      button.classList.add('active');
+      const previewUrl = resolveAvatarUrl(button.dataset.avatar);
+      state.avatar = previewUrl;
+      avatarPreview.src = previewUrl;
+      avatarPicker.classList.add('hidden');
+    });
+  });
+
+  if (customAvatarButton && customAvatarInput) {
+    customAvatarButton.addEventListener('click', () => {
+      customAvatarInput.click();
+    });
+
+    customAvatarInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (file && file.type.startsWith('image/')) {
+        try {
+          const dataUrl = await resizeAvatarToDataUrl(file);
+          avatarPickerOptions.forEach((btn) => btn.classList.remove('active'));
+          customAvatarButton.classList.add('active');
+          state.avatar = dataUrl;
+          avatarPreview.src = dataUrl;
+          avatarPicker.classList.add('hidden');
+        } catch (error) {
+          console.warn('Avatar upload failed:', error);
+        }
+      }
+    });
+  }
+};
+
+initializeAvatarSelection();
 
 const legalAcceptInput = document.getElementById('legalAccept');
 const licenseContentEl = document.getElementById('licenseContent');

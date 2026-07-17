@@ -2,6 +2,16 @@
 <rect width="186" height="161" rx="40" fill="url(#paint0_linear_0_1)"/>
 <rect width="186" height="161" rx="40" fill="white"/>
 <rect x="16" y="15" width="153" height="132" rx="40" fill="#4BCFFF"/>
+<path d="M131 81.5C131 103.315 113.315 121 91.5 121C69.6848 121 52 103.315 52 81.5C52 59.6848 69.6848 42 91.5 42C113.315 42 131 59.6848 131 81.5ZM70.5528 81.5C70.5528 93.0688 79.9312 102.447 91.5 102.447C103.069 102.447 112.447 93.0688 112.447 81.5C112.447 69.9312 103.069 60.5528 91.5 60.5528C79.9312 60.5528 70.5528 69.9312 70.5528 81.5Z" fill="white"/>
+<ellipse cx="118.5" cy="55" rx="10.5" ry="11" fill="white"/>
+<circle cx="130.5" cy="76.5" r="10.5" fill="white"/>
+<circle cx="125" cy="101" r="11" fill="white"/>
+<ellipse cx="105" cy="116.5" rx="11" ry="10.5" fill="white"/>
+<ellipse cx="79" cy="116.5" rx="11" ry="10.5" fill="white"/>
+<ellipse cx="58.5" cy="101" rx="10.5" ry="11" fill="white"/>
+<ellipse cx="55" cy="76.5" rx="11" ry="10.5" fill="white"/>
+<circle cx="67.5" cy="52.5" r="10.5" fill="white"/>
+<ellipse cx="92" cy="45" rx="10" ry="11" fill="white"/>
 <defs>
 <linearGradient id="paint0_linear_0_1" x1="93" y1="0" x2="-10" y2="161" gradientUnits="userSpaceOnUse">
 <stop stop-color="white"/>

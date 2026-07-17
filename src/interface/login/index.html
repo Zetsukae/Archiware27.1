@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ArchiwareOS Login</title>
+    <link rel="stylesheet" href="login.css" />
+  </head>
+  <body>
+    <div class="login-background" id="loginBackground"></div>
+    
+    <div class="login-time" id="loginTime">00:00</div>
+
+    <div class="login-container" id="loginContainer">
+      <div class="login-card" id="loginCard">
+        <div class="user-avatar">
+          <img id="userAvatarImg" src="" alt="User" />
+        </div>
+
+        <div class="user-info">
+          <p class="user-name" id="userName"></p>
+        </div>
+
+        <form class="login-form" id="loginForm">
+          <div class="form-group">
+            <input
+              id="loginPassword"
+              type="password"
+              placeholder="Enter your password"
+              required
+              autocomplete="current-password"
+            />
+          </div>
+
+          <div class="login-error" id="loginError" style="display: none;"></div>
+
+          <button type="submit" class="login-button">Sign in</button>
+        </form>
+      </div>
+    </div>
+
+    <button class="settings-menu-button" id="settingsMenuButton" title="Settings">
+      <img src="../../public/icons/settings.svg" alt="Settings" />
+    </button>
+
+    <div class="settings-menu" id="settingsMenu">
+      <button class="settings-menu-item" id="rebootOption">Reboot</button>
+      <button class="settings-menu-item" id="shutdownOption">Shutdown</button>
+    </div>
+
+    <div class="power-overlay" id="powerOverlay">
+      <div class="power-screen">
+        <div class="power-title" id="powerTitle"></div>
+        <div class="power-log" id="powerLog"></div>
+      </div>
+    </div>
+
+    <script type="module" src="login.js"></script>
+  </body>
+</html>

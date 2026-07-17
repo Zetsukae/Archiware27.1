@@ -3,6 +3,7 @@ import { initExplorerWindow, renderExplorerWindow, findExplorerNodeById, findExp
 import { initTextEditorWindow } from './apps/textEditor.js';
 import { initPluberryWindow } from './apps/pluberry.js';
 import { initBrowserWindow } from './apps/browser.js';
+import { bootSequenceLines } from './bootSequence.js';
 
 const clock = document.getElementById('clock');
 const profileTrigger = document.getElementById('profileTrigger');
@@ -13,11 +14,14 @@ const quickFilesBtn = document.getElementById('quickFilesBtn');
 const shortcutToggleBtn = document.getElementById('shortcutToggleBtn');
 const shortcutDropdown = document.getElementById('shortcutDropdown');
 const powerOverlay = document.getElementById('powerOverlay');
+const powerTitle = document.getElementById('powerTitle');
+const powerLog = document.getElementById('powerLog');
 const minimizedAppsContainer = document.getElementById('minimizedApps');
 const calendarPopup = document.getElementById('calendarPopup');
 const calendarDate = document.getElementById('calendarDate');
 const calendarGrid = document.getElementById('calendarGrid');
 const dockItems = document.querySelectorAll('.dock__item');
+const runningDockApps = document.getElementById('runningDockApps');
 let windows = document.querySelectorAll('.window');
 let windowZIndex = 50;
 const windowControls = document.querySelectorAll('.window__control');
@@ -45,8 +49,79 @@ const windowPlacementState = { offsetX: 30, offsetY: 30 };
 let memoryKillSwitchTriggered = false;
 let altKeyState = { isPressed: false, usedWithOtherKey: false };
 
+const isLoginPage = window.location.pathname.includes('/login/');
+const isSetupPage = window.location.pathname.endsWith('/setup.html') || window.location.pathname.includes('/setup/');
+const isDesktopShellPage = window.location.pathname.endsWith('/index.html') || window.location.pathname.endsWith('/src/interface/index.html');
+const hasCompletedSetup = localStorage.getItem('archiware_setup_complete') === 'true';
+const isSessionActive = localStorage.getItem('archiware_session_active') === 'true';
+
+if (hasCompletedSetup && !isLoginPage && !isSetupPage && isDesktopShellPage && !isSessionActive) {
+  window.location.replace('./login/');
+}
+
+const redirectToLogin = (target = './login/') => {
+  localStorage.setItem('archiware_session_active', 'false');
+  window.location.href = target;
+};
+
 const getOpenWindowCount = () => {
   return Array.from(document.querySelectorAll('.window')).filter((win) => !win.classList.contains('is-closed') && !win.classList.contains('is-minimized')).length;
+};
+
+const getDockAppConfig = (appId) => {
+  const appConfigs = {
+    explorer: { label: 'Explorer', icon: '../public/icons/explorer.svg' },
+    settings: { label: 'Settings', icon: '../public/icons/settings.svg' },
+    browser: { label: 'Browser', icon: '../public/icons/browser.svg' },
+    pluberry: { label: 'Pluberry', icon: '../public/icons/app.svg' },
+    editor: { label: 'Text Editor', icon: '../public/icons/textEditor.svg' }
+  };
+  return appConfigs[appId] || null;
+};
+
+const refreshRunningDockApps = () => {
+  if (!runningDockApps) return;
+
+  const runningApps = Array.from(document.querySelectorAll('.window'))
+    .filter((win) => !win.classList.contains('is-closed') && !win.classList.contains('is-minimized'))
+    .map((win) => getAppIdForWindow(win.id))
+    .filter(Boolean)
+    .filter((appId, index, apps) => apps.indexOf(appId) === index)
+    .filter((appId) => !['explorer', 'settings', 'browser', 'music'].includes(appId));
+
+  runningDockApps.innerHTML = '';
+  runningDockApps.classList.toggle('is-empty', runningApps.length === 0);
+
+  const separator = document.querySelector('.dock__separator');
+  if (separator) {
+    separator.classList.toggle('is-hidden', runningApps.length === 0);
+  }
+
+  runningApps.forEach((appId) => {
+    const config = getDockAppConfig(appId);
+    if (!config) return;
+
+    const button = document.createElement('button');
+    button.className = 'dock__item dock__item--running';
+    button.type = 'button';
+    button.dataset.app = appId;
+    button.setAttribute('aria-label', config.label);
+    button.innerHTML = `<img src="${config.icon}" alt="${config.label}" />`;
+
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      launchAppWindow(appId);
+    });
+
+    button.addEventListener('contextmenu', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      showContextMenu(event.clientX, event.clientY, getDockMenuItems(appId));
+    });
+
+    runningDockApps.appendChild(button);
+  });
 };
 
 const enforceMemoryLimit = () => {
@@ -716,11 +791,25 @@ const restoreMinimizedWindow = (windowId) => {
   }
 };
 
+const preventPowerContextMenu = (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+};
+
+const preventPowerInteractions = (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+};
+
 const hidePowerOverlay = () => {
   if (!powerOverlay) return;
   powerOverlay.classList.remove('visible');
   powerOverlay.classList.add('hidden');
   powerOverlay.setAttribute('aria-hidden', 'true');
+  document.body.style.cursor = '';
+  document.removeEventListener('contextmenu', preventPowerContextMenu, { capture: true });
+  document.removeEventListener('mousedown', preventPowerInteractions, { capture: true });
+  document.removeEventListener('mouseup', preventPowerInteractions, { capture: true });
 };
 
 const showPowerOverlay = () => {
@@ -728,48 +817,103 @@ const showPowerOverlay = () => {
   powerOverlay.classList.remove('hidden');
   powerOverlay.classList.add('visible');
   powerOverlay.setAttribute('aria-hidden', 'false');
+  document.body.style.cursor = 'none';
+  document.addEventListener('contextmenu', preventPowerContextMenu, { capture: true });
+  document.addEventListener('mousedown', preventPowerInteractions, { capture: true, passive: false });
+  document.addEventListener('mouseup', preventPowerInteractions, { capture: true, passive: false });
+};
+
+const runPowerSequence = (mode, options = {}) => {
+  const shouldWaitForKey = options.waitForKey === true;
+  showPowerOverlay();
+
+  if (powerTitle) {
+    powerTitle.textContent = '';
+  }
+
+  if (powerLog) {
+    powerLog.innerHTML = '';
+  }
+
+  const delay = mode === 'shutdown' ? 120 : 140;
+  let index = 0;
+
+  const revealNextLine = () => {
+    if (!powerLog) {
+      return;
+    }
+
+    const line = document.createElement('div');
+    line.className = 'power-line';
+
+    const content = bootSequenceLines[index];
+    if (content.includes('[ OK ]')) {
+      const prefix = content.split('[ OK ]')[0];
+      const suffix = content.split('[ OK ]')[1] || '';
+      line.innerHTML = `${prefix}[ <span style="color:#4ade80">OK</span> ]${suffix}`;
+    } else {
+      line.textContent = content;
+    }
+
+    powerLog.appendChild(line);
+
+    requestAnimationFrame(() => {
+      line.classList.add('is-visible');
+      if (powerLog) {
+        powerLog.scrollTop = powerLog.scrollHeight;
+      }
+    });
+
+    index += 1;
+
+    if (index < bootSequenceLines.length) {
+      setTimeout(revealNextLine, delay);
+    } else if (mode === 'shutdown') {
+      setTimeout(() => {
+        if (powerLog) {
+          powerLog.innerHTML = '';
+          powerLog.scrollTop = 0;
+        }
+
+        if (shouldWaitForKey) {
+          const resumeSequence = (event) => {
+            if (event.repeat) return;
+            document.removeEventListener('keydown', resumeSequence);
+            runPowerSequence('shutdown');
+          };
+          document.addEventListener('keydown', resumeSequence, { once: true });
+        } else {
+          setTimeout(() => {
+            hidePowerOverlay();
+            redirectToLogin();
+          }, 5000);
+        }
+      }, 200);
+    } else {
+      setTimeout(() => {
+        if (powerLog) {
+          powerLog.innerHTML = '';
+          powerLog.scrollTop = 0;
+        }
+        setTimeout(() => {
+          hidePowerOverlay();
+          redirectToLogin();
+        }, 3000);
+      }, 200);
+    }
+  };
+
+  revealNextLine();
 };
 
 const shutdown = () => {
-  showPowerOverlay();
-  const onKey = () => {
-    hidePowerOverlay();
-    window.removeEventListener('keydown', onKey);
-  };
-  window.addEventListener('keydown', onKey, { once: true });
+  localStorage.setItem('archiware_session_active', 'false');
+  runPowerSequence('shutdown', { waitForKey: true });
 };
 
 const reboot = () => {
-  showPowerOverlay();
-
-  let f2PressCount = 0;
-  let redirectTimer = null;
-
-  const handleRebootKey = (event) => {
-    if (event.key !== 'F2') return;
-
-    event.preventDefault();
-    f2PressCount += 1;
-
-    if (f2PressCount >= 2 || event.repeat) {
-      if (redirectTimer) {
-        clearTimeout(redirectTimer);
-      }
-
-      redirectTimer = setTimeout(() => {
-        window.location.href = './UEFI/';
-      }, 2000);
-    }
-  };
-
-  window.addEventListener('keydown', handleRebootKey);
-
-  setTimeout(() => {
-    window.removeEventListener('keydown', handleRebootKey);
-    if (!redirectTimer) {
-      hidePowerOverlay();
-    }
-  }, 2000);
+  localStorage.setItem('archiware_session_active', 'false');
+  runPowerSequence('reboot');
 };
 
 const focusWindow = (windowEl) => {
@@ -812,6 +956,7 @@ const getAppIdForWindow = (windowId) => {
   if (id.startsWith('settingsWindow')) return 'settings';
   if (id.startsWith('pluberryWindow')) return 'pluberry';
   if (id.startsWith('browserWindow')) return 'browser';
+  if (id.startsWith('textEditorWindow')) return 'editor';
   return null;
 };
 
@@ -879,6 +1024,7 @@ const createAppWindow = (appId) => {
   windows = document.querySelectorAll('.window');
   focusWindow(clone);
   setDockOpenState(appId, true);
+  refreshRunningDockApps();
   enforceMemoryLimit();
   return clone;
 };
@@ -1232,6 +1378,7 @@ const bindWindowInteractions = (win) => {
           }
         });
         setDockOpenState(currentAppId, hasOpenWindowsForApp(currentAppId));
+        refreshRunningDockApps();
       }
     });
   }
@@ -1245,6 +1392,7 @@ const bindWindowInteractions = (win) => {
         const currentAppId = getAppIdForWindow(win.id);
         if (currentAppId) {
           setDockOpenState(currentAppId, hasOpenWindowsForApp(currentAppId));
+          refreshRunningDockApps();
           const dockItem = document.querySelector(`.dock__item[data-app="${currentAppId}"]`);
           if (dockItem) dockItem.classList.remove('is-window-hover', 'is-window-focused');
         }
@@ -1333,6 +1481,21 @@ if (restartBtn) {
       profilePopup.setAttribute('aria-hidden', 'true');
     }
     reboot();
+  });
+}
+
+const logOutBtn = document.getElementById('quickLogOutBtn');
+
+if (logOutBtn) {
+  logOutBtn.addEventListener('click', () => {
+    hideCalendar();
+    if (profilePopup) {
+      profilePopup.classList.remove('visible');
+      profilePopup.classList.add('hidden');
+      profilePopup.setAttribute('aria-hidden', 'true');
+    }
+    localStorage.setItem('archiware_session_active', 'false');
+    redirectToLogin('./login/');
   });
 }
 
@@ -1537,6 +1700,16 @@ document.addEventListener('click', (event) => {
   const buildUniqueDesktopItemName = (baseName, targetEl = null) => {
     const trimmedBase = String(baseName || '').trim();
     const isFile = targetEl?.classList.contains('desktop-file');
+    const existingNames = getExistingFolderNames(targetEl).map((name) => name.toLowerCase());
+
+    const getFileNameWithSuffix = (name, suffix) => {
+      const lastDotIndex = name.lastIndexOf('.');
+      if (lastDotIndex > 0 && lastDotIndex < name.length - 1) {
+        return `${name.slice(0, lastDotIndex)} ${suffix}${name.slice(lastDotIndex)}`;
+      }
+      return `${name} ${suffix}`;
+    };
+
     let candidate = trimmedBase || (isFile ? 'New File.txt' : 'Untitled Folder');
     let extension = '';
 
@@ -1558,14 +1731,15 @@ document.addEventListener('click', (event) => {
       }
     }
 
-    const existingNames = getExistingFolderNames(targetEl).map((name) => name.toLowerCase());
     if (!existingNames.includes(candidate.toLowerCase())) return candidate;
 
     let suffix = 2;
-    while (existingNames.includes(`${candidate} ${suffix}`.toLowerCase())) {
+    let suffixedName = getFileNameWithSuffix(candidate, suffix);
+    while (existingNames.includes(suffixedName.toLowerCase())) {
       suffix += 1;
+      suffixedName = getFileNameWithSuffix(candidate, suffix);
     }
-    return `${candidate} ${suffix}`;
+    return suffixedName;
   };
 
   const getExistingFolderNames = (currentEl = null) => {

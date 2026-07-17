@@ -134,10 +134,26 @@ const buildUniqueName = (currentNode, baseName, currentId = null) => {
   const names = (currentNode?.children || [])
     .filter((entry) => entry.id !== currentId)
     .map((entry) => entry.name.toLowerCase());
+  
   if (!names.includes(trimmedBase.toLowerCase())) return trimmedBase;
+  
+  // Extract extension if present
+  const lastDotIndex = trimmedBase.lastIndexOf('.');
+  let nameWithoutExt = trimmedBase;
+  let ext = '';
+  
+  if (lastDotIndex > 0 && lastDotIndex < trimmedBase.length - 1) {
+    nameWithoutExt = trimmedBase.slice(0, lastDotIndex);
+    ext = trimmedBase.slice(lastDotIndex);
+  }
+  
   let suffix = 2;
-  while (names.includes(`${trimmedBase} ${suffix}`.toLowerCase())) suffix += 1;
-  return `${trimmedBase} ${suffix}`;
+  let candidate = `${nameWithoutExt} ${suffix}${ext}`;
+  while (names.includes(candidate.toLowerCase())) {
+    suffix += 1;
+    candidate = `${nameWithoutExt} ${suffix}${ext}`;
+  }
+  return candidate;
 };
 
 export const buildUniqueExplorerFolderName = (currentNode, baseName = 'New Folder') => {
