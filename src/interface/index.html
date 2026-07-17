@@ -64,6 +64,17 @@
                 <strong>View GitHub</strong>
               </a>
             </div>
+            <button class="button button--glass" id="shortcutToggleBtn" type="button">Keyboard shortcuts</button>
+            <div class="shortcut-dropdown hidden" id="shortcutDropdown" aria-hidden="true">
+              <h2>Keyboard shortcuts</h2>
+              <p>Use these shortcuts to navigate the OS quickly:</p>
+              <ul>
+                <li><strong>ALT + E</strong> - Open Explorer</li>
+                <li><strong>ALT + I</strong> - Open Settings</li>
+                <li><strong>ALT + P</strong> - Open Pluberry</li>
+                <li><strong>ALT</strong> - Open OS button menu</li>
+              </ul>
+            </div>
           </div>
         </div>
       </section>
@@ -126,6 +137,9 @@
         <button class="dock__item" data-app="settings" aria-label="Settings">
           <img src="../public/icons/settings.svg" alt="Settings" />
         </button>
+        <button class="dock__item" data-app="browser" aria-label="Browser">
+          <img src="../public/icons/browser.svg" alt="Browser" />
+        </button>
         <button class="dock__item" data-app="music" aria-label="Music">
           <img src="../public/icons/music.svg" alt="Music" />
         </button>
@@ -151,9 +165,9 @@
           <div class="sidebar-group">
             <span class="sidebar-group-title">Settings</span>
             <ul>
-              <li class="active" data-settings-tab="general"><span class="sidebar-icon">⚙️</span> General</li>
-              <li data-settings-tab="appearance"><span class="sidebar-icon">🌙</span> Appearance</li>
-              <li data-settings-tab="about"><span class="sidebar-icon">📄</span> About</li>
+              <li class="active" data-settings-tab="general"><span class="sidebar-icon"><img src="../public/icons/general.svg" alt="General" /></span> General</li>
+              <li data-settings-tab="appearance"><span class="sidebar-icon"><img src="../public/icons/customize.svg" alt="Appearance" /></span> Appearance</li>
+              <li data-settings-tab="about"><span class="sidebar-icon"><img src="../public/icons/about.svg" alt="About" /></span> About</li>
             </ul>
           </div>
         </aside>
@@ -272,7 +286,27 @@
           <button class="pluberry-launch-button" type="button">Launch Pluberry</button>
         </div>
         <iframe class="pluberry-frame" title="Pluberry" src="about:blank"></iframe>
+        <div class="pluberry-footer-link">
+          <a href="https://github.com/Zetsukae/Pluberry" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
       </div>
+    </div>
+  </section>
+
+  <section class="window liquid-glass-card is-closed" id="browserWindow" data-app-label="Browser" aria-label="Browser">
+    <div class="window__header finder-header">
+      <div class="window__controls">
+        <button class="window__control window__control--close" data-action="close" aria-label="Close"></button>
+        <button class="window__control window__control--minimize" data-action="minimize" aria-label="Minimize"></button>
+      </div>
+
+      <div class="finder-toolbar browser-toolbar">
+        <div class="browser-url-bar">https://www.wikipedia.org</div>
+      </div>
+    </div>
+
+    <div class="window__content finder-content">
+      <iframe class="browser-webview" title="Browser" src="https://www.wikipedia.org"></iframe>
     </div>
   </section>
 

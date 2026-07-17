@@ -4,6 +4,8 @@ const availableWallpapers = [
   { file: 'Archiware24.jpeg', label: 'Archiware 24' }
 ];
 
+let wallpaperChangeRequestId = 0;
+
 const defaultSettings = {
   wallpaper: 'wallpaper.png',
   customWallpaper: '',
@@ -52,11 +54,15 @@ export const applyDarkMode = (enabled) => {
 
 export const applyWallpaper = (fileName) => {
   if (!fileName) return;
+  wallpaperChangeRequestId += 1;
+  const currentRequestId = wallpaperChangeRequestId;
   const body = document.body;
   body.style.transition = 'opacity 0.3s ease-in-out';
   body.style.opacity = '0';
-  
+
   setTimeout(() => {
+    if (currentRequestId !== wallpaperChangeRequestId) return;
+
     if (fileName === 'custom' && appSettings.customWallpaper) {
       body.style.backgroundImage = `url("${appSettings.customWallpaper}")`;
     } else {
@@ -65,13 +71,15 @@ export const applyWallpaper = (fileName) => {
     }
     appSettings.wallpaper = fileName;
     saveAppSettings();
-    
+
     setTimeout(() => {
+      if (currentRequestId !== wallpaperChangeRequestId) return;
       body.style.opacity = '1';
     }, 10);
   }, 150);
-  
+
   setTimeout(() => {
+    if (currentRequestId !== wallpaperChangeRequestId) return;
     body.style.transition = '';
   }, 600);
 };
@@ -123,19 +131,27 @@ export const renderWallpaperOptions = (container) => {
   if (!container) return;
   container.innerHTML = '';
 
+  const updateSelectionState = () => {
+    const thumbs = container.querySelectorAll('.wallpaper-thumb');
+    thumbs.forEach((thumb) => {
+      thumb.classList.toggle('selected', thumb.dataset.wallpaperFile === appSettings.wallpaper);
+    });
+  };
+
   availableWallpapers.forEach((wallpaper) => {
     const thumb = document.createElement('button');
     thumb.type = 'button';
     thumb.className = 'wallpaper-thumb';
     thumb.dataset.wallpaperFile = wallpaper.file;
-    if (appSettings.wallpaper === wallpaper.file) thumb.classList.add('selected');
     thumb.innerHTML = `
       <img src="${wallpaperBasePath}${wallpaper.file}" alt="${wallpaper.label}" />
       <span>${wallpaper.label}</span>
     `;
     thumb.addEventListener('click', () => {
       applyWallpaper(wallpaper.file);
-      renderWallpaperOptions(container);
+      appSettings.wallpaper = wallpaper.file;
+      saveAppSettings();
+      updateSelectionState();
     });
     container.appendChild(thumb);
   });
@@ -145,17 +161,20 @@ export const renderWallpaperOptions = (container) => {
     customThumb.type = 'button';
     customThumb.className = 'wallpaper-thumb';
     customThumb.dataset.wallpaperFile = 'custom';
-    if (appSettings.wallpaper === 'custom') customThumb.classList.add('selected');
     customThumb.innerHTML = `
       <div class="wallpaper-custom-placeholder">Local wallpaper</div>
       <span>Custom image</span>
     `;
     customThumb.addEventListener('click', () => {
       applyWallpaper('custom');
-      renderWallpaperOptions(container);
+      appSettings.wallpaper = 'custom';
+      saveAppSettings();
+      updateSelectionState();
     });
     container.appendChild(customThumb);
   }
+
+  updateSelectionState();
 };
 
 export const initSettingsWindow = (windowEl) => {

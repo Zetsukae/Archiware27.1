@@ -2,6 +2,7 @@ import { appSettings, saveAppSettings, applyWindowTransparency, applyDarkMode, a
 import { initExplorerWindow, renderExplorerWindow, findExplorerNodeById, findExplorerNodePathByName, getExplorerDesktopNode, getExplorerSegments, navigateExplorerWindow, goBackExplorerWindow, goForwardExplorerWindow, createExplorerFolderInWindow, renameExplorerItemInWindow } from './apps/explorer.js';
 import { initTextEditorWindow } from './apps/textEditor.js';
 import { initPluberryWindow } from './apps/pluberry.js';
+import { initBrowserWindow } from './apps/browser.js';
 
 const clock = document.getElementById('clock');
 const profileTrigger = document.getElementById('profileTrigger');
@@ -9,6 +10,8 @@ const profilePopup = document.getElementById('profilePopup');
 const powerOffBtn = document.getElementById('powerOffBtn');
 const restartBtn = document.getElementById('restartBtn');
 const quickFilesBtn = document.getElementById('quickFilesBtn');
+const shortcutToggleBtn = document.getElementById('shortcutToggleBtn');
+const shortcutDropdown = document.getElementById('shortcutDropdown');
 const powerOverlay = document.getElementById('powerOverlay');
 const minimizedAppsContainer = document.getElementById('minimizedApps');
 const calendarPopup = document.getElementById('calendarPopup');
@@ -23,7 +26,7 @@ const profileTitleEl = document.getElementById('profileTitle');
 const profileSubtitleEl = document.getElementById('profileSubtitle');
 const topbar = document.querySelector('.desktop__topbar');
 const dock = document.querySelector('.dock');
-const appWindowCounters = { explorer: 1, settings: 1, editor: 0, pluberry: 0 };
+const appWindowCounters = { explorer: 1, settings: 1, editor: 0, pluberry: 0, browser: 0 };
 const windowPlacementState = { offsetX: 30, offsetY: 30 };
 let memoryKillSwitchTriggered = false;
 
@@ -63,12 +66,16 @@ const getNextWindowPosition = (windowWidth = 900, windowHeight = 560) => {
   const maxY = Math.max(padding, desktopHeight - windowHeight - padding);
 
   const previousWindow = Array.from(document.querySelectorAll('.window'))
-    .filter((win) => !win.classList.contains('is-closed') && !win.classList.contains('is-minimized'))
+    .filter((win) => !win.classList.contains('is-closed') && !win.classList.contains('is-minimized') && win.id !== 'mainWindow')
     .sort((a, b) => Number(a.style.zIndex || 0) - Number(b.style.zIndex || 0))
     .pop();
 
-  const baseX = previousWindow ? previousWindow.offsetLeft : padding;
-  const baseY = previousWindow ? previousWindow.offsetTop : padding;
+  const baseX = previousWindow
+    ? previousWindow.offsetLeft
+    : Math.max(padding, Math.round((desktopWidth - windowWidth) / 2));
+  const baseY = previousWindow
+    ? previousWindow.offsetTop
+    : Math.max(padding, Math.round((desktopHeight - windowHeight) / 2));
 
   let nextX = baseX + windowPlacementState.offsetX;
   let nextY = baseY + windowPlacementState.offsetY;
@@ -684,6 +691,7 @@ const getAppIdForWindow = (windowId) => {
   if (id.startsWith('explorerWindow')) return 'explorer';
   if (id.startsWith('settingsWindow')) return 'settings';
   if (id.startsWith('pluberryWindow')) return 'pluberry';
+  if (id.startsWith('browserWindow')) return 'browser';
   return null;
 };
 
@@ -713,7 +721,7 @@ const openFolderInExplorer = (folderName) => {
 };
 
 const createAppWindow = (appId) => {
-  const templateId = appId === 'explorer' ? 'explorerWindow' : appId === 'settings' ? 'settingsWindow' : appId === 'editor' ? 'textEditorWindow' : appId === 'pluberry' ? 'pluberryWindow' : null;
+  const templateId = appId === 'explorer' ? 'explorerWindow' : appId === 'settings' ? 'settingsWindow' : appId === 'editor' ? 'textEditorWindow' : appId === 'pluberry' ? 'pluberryWindow' : appId === 'browser' ? 'browserWindow' : null;
   const template = document.getElementById(templateId);
   if (!template) return null;
 
@@ -723,8 +731,8 @@ const createAppWindow = (appId) => {
   clone.id = instanceId;
   clone.classList.remove('is-closed', 'is-minimized', 'minimized-hidden');
   clone.setAttribute('aria-hidden', 'false');
-  clone.setAttribute('aria-label', appId === 'explorer' ? 'Explorer' : 'Settings');
-  clone.dataset.appLabel = appId === 'explorer' ? 'Explorer' : appId === 'settings' ? 'Settings' : appId === 'editor' ? 'Text Editor' : appId === 'pluberry' ? 'Pluberry' : '';
+  clone.setAttribute('aria-label', appId === 'explorer' ? 'Explorer' : appId === 'settings' ? 'Settings' : appId === 'editor' ? 'Text Editor' : appId === 'pluberry' ? 'Pluberry' : appId === 'browser' ? 'Browser' : '');
+  clone.dataset.appLabel = appId === 'explorer' ? 'Explorer' : appId === 'settings' ? 'Settings' : appId === 'editor' ? 'Text Editor' : appId === 'pluberry' ? 'Pluberry' : appId === 'browser' ? 'Browser' : '';
   clone.style.width = '900px';
   clone.style.height = '560px';
   const position = getNextWindowPosition(900, 560);
@@ -747,6 +755,7 @@ const createAppWindow = (appId) => {
   if (appId === 'settings') initSettingsWindow(clone);
   if (appId === 'editor') initTextEditorWindow(clone, findExplorerNodeById, refreshExplorerWindows);
   if (appId === 'pluberry') initPluberryWindow(clone);
+  if (appId === 'browser') initBrowserWindow(clone);
   windows = document.querySelectorAll('.window');
   focusWindow(clone);
   setDockOpenState(appId, true);
@@ -758,6 +767,7 @@ const openExplorerWindow = () => createAppWindow('explorer');
 
 const openSettingsWindow = () => createAppWindow('settings');
 const openPluberryWindow = () => createAppWindow('pluberry');
+const openBrowserWindow = () => createAppWindow('browser');
 
 const openTextEditorWindow = (fileNode) => {
   const win = createAppWindow('editor');
@@ -784,7 +794,9 @@ const launchAppWindow = (appId) => {
       ? openSettingsWindow()
       : appId === 'pluberry'
         ? openPluberryWindow()
-        : null;
+        : appId === 'browser'
+          ? openBrowserWindow()
+          : null;
   if (win) focusWindow(win);
   return win;
 };
@@ -1177,16 +1189,30 @@ if (clock) {
   });
 }
 
+if (shortcutToggleBtn && shortcutDropdown) {
+  shortcutToggleBtn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const isVisible = shortcutDropdown.classList.contains('visible');
+    shortcutDropdown.classList.toggle('visible', !isVisible);
+    shortcutDropdown.classList.toggle('hidden', isVisible);
+  });
+}
+
 document.addEventListener('click', (event) => {
   if (profilePopup && profilePopup.contains(event.target)) return;
   if (clock && clock.contains(event.target)) return;
   if (calendarPopup && calendarPopup.contains(event.target)) return;
+  if (shortcutDropdown && shortcutDropdown.contains(event.target)) return;
   if (profileTrigger && profileTrigger.contains(event.target)) return;
   if (calendarPopup) hideCalendar();
   if (profilePopup) {
     profilePopup.classList.remove('visible');
     profilePopup.classList.add('hidden');
     profilePopup.setAttribute('aria-hidden', 'true');
+  }
+  if (shortcutDropdown) {
+    shortcutDropdown.classList.remove('visible');
+    shortcutDropdown.classList.add('hidden');
   }
 });
 
