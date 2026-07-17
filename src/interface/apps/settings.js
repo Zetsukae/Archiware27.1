@@ -193,6 +193,20 @@ export const renderWallpaperOptions = (container) => {
   updateSelectionState();
 };
 
+const resolveAvatarUrl = (avatarValue) => {
+  if (!avatarValue) return '';
+  if (avatarValue.startsWith('data:') || avatarValue.startsWith('http://') || avatarValue.startsWith('https://') || avatarValue.startsWith('blob:')) {
+    return avatarValue;
+  }
+  if (avatarValue.startsWith('/')) {
+    return `${window.location.origin}${avatarValue}`;
+  }
+  if (avatarValue.includes('/')) {
+    return avatarValue;
+  }
+  return new URL(`src/public/avatars/${avatarValue}`, getProjectRootUrl()).href;
+};
+
 export const initSettingsWindow = (windowEl) => {
   if (!windowEl) return;
 
@@ -211,6 +225,16 @@ export const initSettingsWindow = (windowEl) => {
   const localWallpaperInput = windowEl.querySelector('#localWallpaperInput');
   const chooseLocalWallpaperButton = windowEl.querySelector('#chooseLocalWallpaperButton');
   const supportButton = windowEl.querySelector('#supportButton');
+  const settingsAvatarButton = windowEl.querySelector('#settingsAvatarButton');
+  const settingsAvatarPicker = windowEl.querySelector('#settingsAvatarPicker');
+  const settingsAvatarPreview = windowEl.querySelector('#settingsAvatarPreview');
+  const settingsAvatarOptions = windowEl.querySelectorAll('.account-avatar-option[data-avatar]');
+  const accountSidebarAvatar = document.getElementById('accountSidebarAvatar');
+  const settingsCustomAvatarButton = windowEl.querySelector('#settingsCustomAvatarButton');
+  const settingsCustomAvatarInput = windowEl.querySelector('#settingsCustomAvatarInput');
+  const settingsUsernameInput = windowEl.querySelector('#settingsUsernameInput');
+  const settingsPasswordInput = windowEl.querySelector('#settingsPasswordInput');
+  const adminToggle = windowEl.querySelector('#adminToggle');
 
   const setActiveTab = (tabKey) => {
     tabItems.forEach((item) => item.classList.toggle('active', item.dataset.settingsTab === tabKey));
@@ -316,5 +340,130 @@ export const initSettingsWindow = (windowEl) => {
     });
   }
 
-  setActiveTab('general');
+  const updateAccountAvatarUi = () => {
+    const savedProfile = localStorage.getItem('archiware_profile');
+    const avatarSrc = savedProfile ? resolveAvatarUrl(savedProfile) : resolveAvatarUrl('happy_avatar.svg');
+    if (settingsAvatarPreview) {
+      settingsAvatarPreview.src = avatarSrc;
+    }
+    if (accountSidebarAvatar) {
+      accountSidebarAvatar.src = avatarSrc;
+    }
+  };
+
+  const showAvatarPicker = () => {
+    if (!settingsAvatarPicker) return;
+    settingsAvatarPicker.classList.remove('hidden', 'closing');
+    settingsAvatarPicker.setAttribute('aria-hidden', 'false');
+    // Force layout before applying the visible state so the transition animates.
+    void settingsAvatarPicker.offsetWidth;
+    requestAnimationFrame(() => {
+      settingsAvatarPicker.classList.add('visible');
+    });
+  };
+
+  const hideAvatarPicker = () => {
+    if (!settingsAvatarPicker) return;
+    settingsAvatarPicker.classList.remove('visible');
+    settingsAvatarPicker.classList.add('closing');
+    settingsAvatarPicker.setAttribute('aria-hidden', 'true');
+    const onTransitionEnd = (event) => {
+      if (event.propertyName !== 'opacity') return;
+      settingsAvatarPicker.classList.add('hidden');
+      settingsAvatarPicker.classList.remove('closing');
+      settingsAvatarPicker.removeEventListener('transitionend', onTransitionEnd);
+    };
+    settingsAvatarPicker.addEventListener('transitionend', onTransitionEnd);
+  };
+
+  if (settingsAvatarButton && settingsAvatarPicker) {
+    settingsAvatarButton.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (settingsAvatarPicker.classList.contains('visible')) {
+        hideAvatarPicker();
+      } else {
+        if (settingsAvatarPicker.classList.contains('hidden')) {
+          settingsAvatarPicker.classList.remove('hidden');
+        }
+        showAvatarPicker();
+      }
+    });
+  }
+
+  settingsAvatarOptions.forEach((option) => {
+    option.addEventListener('click', () => {
+      const avatarValue = option.dataset.avatar;
+      if (!avatarValue) return;
+      const avatarUrl = resolveAvatarUrl(avatarValue);
+      localStorage.setItem('archiware_profile', avatarUrl);
+      updateAccountAvatarUi();
+      hideAvatarPicker();
+    });
+  });
+
+  if (settingsCustomAvatarButton && settingsCustomAvatarInput) {
+    settingsCustomAvatarButton.addEventListener('click', () => {
+      settingsCustomAvatarInput.click();
+    });
+
+    settingsCustomAvatarInput.addEventListener('change', (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (loadEvent) => {
+        const dataUrl = loadEvent.target.result;
+        localStorage.setItem('archiware_profile', dataUrl);
+        updateAccountAvatarUi();
+        hideAvatarPicker();
+      };
+      reader.readAsDataURL(file);
+      event.target.value = '';
+    });
+  }
+
+  if (settingsUsernameInput) {
+    const storedUsername = localStorage.getItem('archiware_username') || 'User';
+    settingsUsernameInput.value = storedUsername;
+    settingsUsernameInput.addEventListener('input', (event) => {
+      const value = event.target.value.trim() || 'User';
+      localStorage.setItem('archiware_username', value);
+      const welcomeUsername = document.getElementById('welcomeUsername');
+      if (welcomeUsername) {
+        welcomeUsername.textContent = value;
+      }
+    });
+  }
+
+  if (settingsPasswordInput) {
+    const storedPassword = localStorage.getItem('archiware_password') || '';
+    settingsPasswordInput.value = storedPassword;
+    settingsPasswordInput.addEventListener('input', (event) => {
+      localStorage.setItem('archiware_password', event.target.value);
+    });
+  }
+
+  if (adminToggle) {
+    const storedAdminRaw = localStorage.getItem('archiware_is_admin');
+    const storedAdmin = storedAdminRaw === null ? true : storedAdminRaw === 'true';
+    adminToggle.checked = storedAdmin;
+    if (storedAdminRaw === null) {
+      localStorage.setItem('archiware_is_admin', 'true');
+    }
+    adminToggle.addEventListener('change', (event) => {
+      localStorage.setItem('archiware_is_admin', event.target.checked ? 'true' : 'false');
+    });
+  }
+
+  updateAccountAvatarUi();
+
+  document.addEventListener('click', (event) => {
+    if (!settingsAvatarPicker || !settingsAvatarButton) return;
+    const clickedInside = settingsAvatarPicker.contains(event.target) || settingsAvatarButton.contains(event.target);
+    if (!clickedInside) {
+      settingsAvatarPicker.classList.add('hidden');
+      settingsAvatarPicker.setAttribute('aria-hidden', 'true');
+    }
+  });
+
+  setActiveTab('account');
 };

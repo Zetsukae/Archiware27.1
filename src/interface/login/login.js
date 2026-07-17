@@ -9,18 +9,34 @@ const loginError = document.getElementById('loginError');
 const loginTime = document.getElementById('loginTime');
 const userAvatarImg = document.getElementById('userAvatarImg');
 const userName = document.getElementById('userName');
+const bootScreen = document.getElementById('bootScreen');
+const bootProgressFill = document.getElementById('bootProgressFill');
 
-const bootSequenceState = {
-  active: false,
-  f2Pressed: false,
+let powerSequenceLocked = false;
+
+const lockPowerSequence = () => {
+  powerSequenceLocked = true;
+};
+
+const unlockPowerSequence = () => {
+  powerSequenceLocked = false;
+};
+
+const preventPowerInteractions = (event) => {
+  event.preventDefault();
+  event.stopPropagation();
 };
 
 const handleBootSequenceKey = (event) => {
-  if (!bootSequenceState.active) return;
+  if (powerSequenceLocked) {
+    event.preventDefault();
+    event.stopPropagation();
+    return;
+  }
+
   if (event.key === 'F2') {
     event.preventDefault();
     event.stopPropagation();
-    bootSequenceState.f2Pressed = true;
   }
 };
 
@@ -82,6 +98,68 @@ const updateTime = () => {
   const hours = String(now.getHours()).padStart(2, '0');
   const minutes = String(now.getMinutes()).padStart(2, '0');
   loginTime.textContent = `${hours}:${minutes}`;
+};
+
+const shouldShowBootAnimation = () => {
+  const skipBootAnimation = localStorage.getItem('archiware_skip_boot_on_login') === 'true';
+  if (skipBootAnimation) {
+    localStorage.removeItem('archiware_skip_boot_on_login');
+    return false;
+  }
+
+  const pendingBootAnimation = localStorage.getItem('archiware_login_boot_pending') === 'true';
+  if (pendingBootAnimation) {
+    localStorage.removeItem('archiware_login_boot_pending');
+    return true;
+  }
+
+  return true;
+};
+
+const hideBootScreen = () => {
+  if (!bootScreen) return;
+  bootScreen.classList.remove('is-visible');
+  bootScreen.classList.add('hidden');
+  bootScreen.style.display = 'none';
+  bootScreen.setAttribute('aria-hidden', 'true');
+};
+
+let bootAnimationTimer = null;
+
+const startBootAnimation = () => {
+  if (!bootScreen || !bootProgressFill) return;
+
+  if (bootAnimationTimer) {
+    clearTimeout(bootAnimationTimer);
+    bootAnimationTimer = null;
+  }
+
+  if (loginCard) {
+    loginCard.classList.remove('visible');
+  }
+  if (loginTime) {
+    loginTime.classList.remove('is-active');
+  }
+
+  bootScreen.classList.remove('hidden');
+  bootScreen.classList.add('is-visible');
+  bootScreen.setAttribute('aria-hidden', 'false');
+  bootScreen.style.display = 'flex';
+  bootProgressFill.style.width = '0%';
+
+  requestAnimationFrame(() => {
+    bootProgressFill.style.width = '100%';
+  });
+
+  bootAnimationTimer = setTimeout(() => {
+    bootScreen.classList.remove('is-visible');
+    bootScreen.classList.add('hidden');
+    setTimeout(() => {
+      bootScreen.style.display = 'none';
+      bootScreen.setAttribute('aria-hidden', 'true');
+      bootAnimationTimer = null;
+    }, 1000);
+  }, 2400);
 };
 
 // Load user info
@@ -235,29 +313,33 @@ const runPowerSequence = (mode, options = {}) => {
   const powerOverlay = document.getElementById('powerOverlay');
   const powerLog = document.getElementById('powerLog');
   const powerTitle = document.getElementById('powerTitle');
-  
+
   if (!powerOverlay || !powerLog) return;
-  
-  const shouldWaitForKey = options.waitForKey || false;
+
+  if (powerSequenceLocked) return;
+
+  const shouldWaitForKey = options.waitForKey === true;
   const delay = mode === 'shutdown' ? 120 : 140;
-  
-  bootSequenceState.active = true;
-  bootSequenceState.f2Pressed = false;
+
+  powerSequenceLocked = true;
   powerOverlay.classList.add('visible');
   powerLog.innerHTML = '';
-  
+
+  if (powerTitle) {
+    powerTitle.textContent = '';
+  }
+
   let lineIndex = 0;
   const handlePowerSequenceKey = (event) => {
     if (event.key !== 'F2') return;
     event.preventDefault();
     event.stopPropagation();
-    bootSequenceState.f2Pressed = true;
     document.removeEventListener('keydown', handlePowerSequenceKey);
     window.removeEventListener('keydown', handlePowerSequenceKey);
   };
   document.addEventListener('keydown', handlePowerSequenceKey);
   window.addEventListener('keydown', handlePowerSequenceKey);
-  
+
   const revealNextLine = () => {
     if (lineIndex >= bootSequenceLines.length) {
       setTimeout(() => {
@@ -265,37 +347,28 @@ const runPowerSequence = (mode, options = {}) => {
         powerLog.scrollTop = 0;
         document.removeEventListener('keydown', handlePowerSequenceKey);
         window.removeEventListener('keydown', handlePowerSequenceKey);
+
         if (shouldWaitForKey) {
-          // Wait for key press
-          const handleKeyForShutdown = () => {
-            document.removeEventListener('keydown', handleKeyForShutdown);
-            window.removeEventListener('keydown', handleKeyForShutdown);
-            powerOverlay.classList.remove('visible');
-            setTimeout(() => {
-              runPowerSequence(mode, options);
-            }, 300);
-          };
-          document.addEventListener('keydown', handleKeyForShutdown);
-          window.addEventListener('keydown', handleKeyForShutdown);
-        } else {
-          if (bootSequenceState.f2Pressed) {
-            bootSequenceState.active = false;
-            redirectToUefiWithDelay(1500);
-            return;
-          }
-          bootSequenceState.active = false;
           setTimeout(() => {
             powerOverlay.classList.remove('visible');
+            localStorage.setItem('archiware_login_boot_pending', 'true');
+            window.location.href = './';
+          }, 5000);
+        } else {
+          setTimeout(() => {
+            powerOverlay.classList.remove('visible');
+            localStorage.setItem('archiware_login_boot_pending', 'true');
+            window.location.href = './';
           }, 3000);
         }
       }, 200);
       return;
     }
-    
+
     const line = bootSequenceLines[lineIndex];
     const lineDiv = document.createElement('div');
     lineDiv.className = 'power-line';
-    
+
     if (line.includes('[ OK ]')) {
       const parts = line.split('[ OK ]');
       const beforeOK = parts[0];
@@ -304,21 +377,21 @@ const runPowerSequence = (mode, options = {}) => {
     } else {
       lineDiv.textContent = line;
     }
-    
+
     powerLog.appendChild(lineDiv);
-    
+
     requestAnimationFrame(() => {
       lineDiv.classList.add('is-visible');
       if (powerLog) {
         powerLog.scrollTop = powerLog.scrollHeight;
       }
     });
-    
+
     lineIndex++;
-    
+
     setTimeout(revealNextLine, delay);
   };
-  
+
   revealNextLine();
 };
 
@@ -339,6 +412,7 @@ if (rebootOption) {
   rebootOption.addEventListener('click', () => {
     settingsMenu.classList.remove('visible');
     localStorage.setItem('archiware_session_active', 'false');
+    unlockPowerSequence();
     runPowerSequence('reboot');
   });
 }
@@ -347,6 +421,7 @@ if (shutdownOption) {
   shutdownOption.addEventListener('click', () => {
     settingsMenu.classList.remove('visible');
     localStorage.setItem('archiware_session_active', 'false');
+    unlockPowerSequence();
     runPowerSequence('shutdown', { waitForKey: true });
   });
 }
@@ -369,6 +444,12 @@ window.addEventListener('load', () => {
   loadWallpaper();
   loadUserInfo();
   updateTime();
+
+  if (shouldShowBootAnimation()) {
+    startBootAnimation();
+  } else {
+    hideBootScreen();
+  }
   
   // Update time every minute
   setInterval(updateTime, 60000);

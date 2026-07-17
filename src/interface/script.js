@@ -76,8 +76,15 @@ const redirectToUefiWithDelay = (delayMs = 1500) => {
   }, delayMs);
 };
 
-const redirectToLogin = (target = './login/') => {
+const redirectToLogin = (target = './login/', options = {}) => {
   localStorage.setItem('archiware_session_active', 'false');
+
+  if (options.skipBootAnimation) {
+    localStorage.setItem('archiware_skip_boot_on_login', 'true');
+  } else if (options.showBootAnimation) {
+    localStorage.setItem('archiware_login_boot_pending', 'true');
+  }
+
   window.location.href = target;
 };
 
@@ -818,6 +825,20 @@ const preventPowerInteractions = (event) => {
   event.stopPropagation();
 };
 
+let powerSequenceLocked = false;
+
+const lockPowerSequence = () => {
+  powerSequenceLocked = true;
+  document.removeEventListener('keydown', preventPowerInteractions);
+  window.removeEventListener('keydown', preventPowerInteractions);
+  document.removeEventListener('keyup', preventPowerInteractions);
+  window.removeEventListener('keyup', preventPowerInteractions);
+};
+
+const unlockPowerSequence = () => {
+  powerSequenceLocked = false;
+};
+
 const hidePowerOverlay = () => {
   if (!powerOverlay) return;
   powerOverlay.classList.remove('visible');
@@ -841,6 +862,8 @@ const showPowerOverlay = () => {
 };
 
 const runPowerSequence = (mode, options = {}) => {
+  if (powerSequenceLocked) return;
+
   const shouldWaitForKey = options.waitForKey === true;
   showPowerOverlay();
 
@@ -913,18 +936,17 @@ const runPowerSequence = (mode, options = {}) => {
           return;
         }
 
+        lockPowerSequence();
+
         if (shouldWaitForKey) {
-          const resumeSequence = (event) => {
-            if (event.repeat) return;
-            document.removeEventListener('keydown', resumeSequence);
-            window.removeEventListener('keydown', resumeSequence);
-            runPowerSequence('shutdown');
-          };
-          document.addEventListener('keydown', resumeSequence, { once: true });
+          setTimeout(() => {
+            hidePowerOverlay();
+            redirectToLogin('./login/', { showBootAnimation: true });
+          }, 5000);
         } else {
           setTimeout(() => {
             hidePowerOverlay();
-            redirectToLogin();
+            redirectToLogin('./login/', { showBootAnimation: true });
           }, 5000);
         }
       }, 200);
@@ -944,9 +966,11 @@ const runPowerSequence = (mode, options = {}) => {
           return;
         }
 
+        lockPowerSequence();
+
         setTimeout(() => {
           hidePowerOverlay();
-          redirectToLogin();
+          redirectToLogin('./login/', { showBootAnimation: true });
         }, 3000);
       }, 200);
     }
@@ -957,11 +981,13 @@ const runPowerSequence = (mode, options = {}) => {
 
 const shutdown = () => {
   localStorage.setItem('archiware_session_active', 'false');
+  unlockPowerSequence();
   runPowerSequence('shutdown', { waitForKey: true });
 };
 
 const reboot = () => {
   localStorage.setItem('archiware_session_active', 'false');
+  unlockPowerSequence();
   runPowerSequence('reboot');
 };
 
@@ -1544,7 +1570,7 @@ if (logOutBtn) {
       profilePopup.setAttribute('aria-hidden', 'true');
     }
     localStorage.setItem('archiware_session_active', 'false');
-    redirectToLogin('./login/');
+    redirectToLogin('./login/', { skipBootAnimation: true });
   });
 }
 

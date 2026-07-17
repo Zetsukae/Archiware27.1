@@ -130,7 +130,7 @@
       <div class="dock__inner">
         <div class="dock__group dock__group--pinned">
           <button class="dock__item" data-menu="osLauncher" aria-label="Applications">
-            <img src="../public/icons/app.svg" alt="Applications" />
+            <img src="../public/icons/archiware.svg" alt="Applications" />
           </button>
           <button class="dock__item" data-app="explorer" aria-label="Explorer">
             <img src="../public/icons/explorer.svg" alt="Explorer" />
@@ -184,17 +184,79 @@
         <aside class="finder-sidebar settings-sidebar">
           <div class="sidebar-group">
             <span class="sidebar-group-title">Settings</span>
-            <ul>
-              <li class="active" data-settings-tab="general"><span class="sidebar-icon"><img src="../public/icons/general.svg" alt="General" /></span> General</li>
+            <ul class="settings-nav-list">
+              <li class="active" data-settings-tab="account">
+                <span class="sidebar-icon sidebar-avatar-icon"><img id="accountSidebarAvatar" src="../public/avatars/happy_avatar.svg" alt="Account" /></span>
+                Account
+              </li>
+              <li class="settings-nav-divider" aria-hidden="true"></li>
+              <li data-settings-tab="general"><span class="sidebar-icon"><img src="../public/icons/general.svg" alt="General" /></span> General</li>
               <li data-settings-tab="appearance"><span class="sidebar-icon"><img src="../public/icons/customize.svg" alt="Appearance" /></span> Appearance</li>
-              <li data-settings-tab="about"><span class="sidebar-icon"><img src="../public/icons/about.svg" alt="About" /></span> About</li>
+              <li class="settings-nav-divider settings-nav-divider--bottom" aria-hidden="true"></li>
+              <li class="about-bottom" data-settings-tab="about"><span class="sidebar-icon"><img src="../public/icons/about.svg" alt="About" /></span> About</li>
             </ul>
           </div>
         </aside>
 
         <main class="finder-main settings-main">
           <div class="path-bar">System Settings</div>
-          <div class="settings-panel settings-panel--general active" data-settings-panel="general">
+          <div class="settings-panel active" data-settings-panel="account">
+            <div class="settings-section">
+              <h3>Account</h3>
+              <div class="account-section">
+                <div class="account-avatar-picker">
+                  <button id="settingsAvatarButton" class="account-avatar-button" type="button" title="Choose avatar">
+                    <img id="settingsAvatarPreview" src="../public/avatars/happy_avatar.svg" alt="Avatar preview" class="account-avatar-preview" />
+                  </button>
+                  <div id="settingsAvatarPicker" class="account-avatar-picker-menu hidden" aria-hidden="true">
+                    <button class="account-avatar-option" data-avatar="happy_avatar.svg" type="button">
+                      <img src="../public/avatars/happy_avatar.svg" alt="Happy" />
+                    </button>
+                    <button class="account-avatar-option" data-avatar="neutral_avatar.svg" type="button">
+                      <img src="../public/avatars/neutral_avatar.svg" alt="Neutral" />
+                    </button>
+                    <button class="account-avatar-option" data-avatar="sad_avatar.svg" type="button">
+                      <img src="../public/avatars/sad_avatar.svg" alt="Sad" />
+                    </button>
+                    <button class="account-avatar-option" data-avatar="undefined_avatar.svg" type="button">
+                      <img src="../public/avatars/undefined_avatar.svg" alt="Undefined" />
+                    </button>
+                    <button id="settingsCustomAvatarButton" class="account-avatar-option account-avatar-custom" type="button" title="Upload custom avatar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                      </svg>
+                    </button>
+                    <input id="settingsCustomAvatarInput" type="file" accept="image/*" hidden />
+                  </div>
+                </div>
+                <div class="account-fields">
+                  <label class="settings-field">
+                    <span>Username</span>
+                    <input type="text" id="settingsUsernameInput" value="User" />
+                  </label>
+                  <label class="settings-field">
+                    <span>Password</span>
+                    <input type="password" id="settingsPasswordInput" placeholder="Enter new password" />
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="settings-section admin-section">
+              <h3>Administrator</h3>
+              <div class="settings-row settings-toggle-row">
+                <span>Enable Administrator (sudo)</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="adminToggle" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="admin-desc">Enabling administrator gives this user sudo-like privileges for system actions.</div>
+            </div>
+          </div>
+
+          <div class="settings-panel settings-panel--general" data-settings-panel="general">
             <div class="settings-section">
               <h3>System</h3>
               <div class="settings-row"><span>OS</span><strong>Archiware OS 27.1</strong></div>
@@ -266,7 +328,10 @@
 
           <div class="settings-panel" data-settings-panel="about">
             <div class="settings-section about-section">
-              <h3>About Archiware</h3>
+              <div class="about-title-row">
+                <h3>About Archiware</h3>
+                <img src="../public/icons/archiware.svg" alt="Archiware logo" class="about-logo" />
+              </div>
               <p>Archiware is a browser-based desktop shell with a Liquid Glass design.</p>
               <p>Maintained exclusively by Zetsukae.</p>
               <p>Released under the GPL-3.0 license.</p>
