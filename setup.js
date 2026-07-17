@@ -26,7 +26,8 @@ const state = {
   avatar: 'avatar-1',
   options: {},
   requiresInternet: false,
-  legalAccepted: false
+  legalAccepted: false,
+  legalLoaded: false
 };
 
 const statusMessages = {
@@ -90,6 +91,7 @@ const renderButtons = () => {
   const isStepThree = state.currentStep === 3;
   const usernameMissing = isStepThree && !state.username;
   const legalMissing = isStepTwo && !state.legalAccepted;
+  const licenseStillLoading = isStepTwo && !state.legalLoaded;
 
   if (hideBackButton) {
     backButton.classList.add('hidden');
@@ -250,14 +252,38 @@ const licenseContentEl = document.getElementById('licenseContent');
 
 const loadRootLicense = async () => {
   if (!licenseContentEl) return;
-  try {
-    const response = await fetch('./LICENSE');
-    if (!response.ok) throw new Error('LICENSE unavailable');
-    const text = await response.text();
-    licenseContentEl.textContent = text.trim() || 'LICENSE file is empty.';
-  } catch (error) {
+  if (legalAcceptInput) {
+    legalAcceptInput.disabled = true;
+  }
+
+  const pathsToTry = [
+    './LICENSE',
+    'LICENSE',
+    `${window.location.origin}${window.location.pathname.replace(/\/[^/]*$/, '/LICENSE')}`,
+    `${window.location.origin}/LICENSE`
+  ];
+
+  for (const path of pathsToTry) {
+    try {
+      const response = await fetch(path);
+      if (!response.ok) continue;
+      const text = await response.text();
+      licenseContentEl.textContent = text.trim() || 'LICENSE file is empty.';
+      break;
+    } catch (error) {
+      // try the next path
+    }
+  }
+
+  if (!licenseContentEl.textContent || licenseContentEl.textContent === 'Loading license...') {
     licenseContentEl.textContent = 'Unable to load LICENSE file from the root path.';
   }
+
+  state.legalLoaded = true;
+  if (legalAcceptInput) {
+    legalAcceptInput.disabled = false;
+  }
+  renderButtons();
 };
 
 if (legalAcceptInput) {
