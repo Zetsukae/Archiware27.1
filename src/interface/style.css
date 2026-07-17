@@ -1826,6 +1826,7 @@ progress::-moz-progress-bar {
   display: none;
   flex-direction: column;
   gap: 10px;
+  z-index: 2147483647;
 }
 
 .os-launcher-power-menu.visible {
