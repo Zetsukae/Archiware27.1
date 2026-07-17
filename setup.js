@@ -256,27 +256,19 @@ const loadRootLicense = async () => {
     legalAcceptInput.disabled = true;
   }
 
-  const pathsToTry = [
-    './LICENSE',
-    'LICENSE',
-    `${window.location.origin}${window.location.pathname.replace(/\/[^/]*$/, '/LICENSE')}`,
-    `${window.location.origin}/LICENSE`
-  ];
+  const licenseUrl = new URL('LICENSE', window.location.href).href;
 
-  for (const path of pathsToTry) {
-    try {
-      const response = await fetch(path);
-      if (!response.ok) continue;
+  try {
+    const response = await fetch(licenseUrl, { cache: 'reload' });
+    if (response.ok) {
       const text = await response.text();
       licenseContentEl.textContent = text.trim() || 'LICENSE file is empty.';
-      break;
-    } catch (error) {
-      // try the next path
+    } else {
+      throw new Error('LICENSE not found');
     }
-  }
-
-  if (!licenseContentEl.textContent || licenseContentEl.textContent === 'Loading license...') {
+  } catch (error) {
     licenseContentEl.textContent = 'Unable to load LICENSE file from the root path.';
+    console.warn('License load failed:', error, licenseUrl);
   }
 
   state.legalLoaded = true;
