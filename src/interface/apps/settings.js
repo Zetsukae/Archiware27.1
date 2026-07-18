@@ -488,6 +488,7 @@ export const initSettingsWindow = (windowEl) => {
       if (welcomeUsername) {
         welcomeUsername.textContent = value;
       }
+      window.dispatchEvent(new Event('archiwareUsernameUpdated'));
     });
   }
 

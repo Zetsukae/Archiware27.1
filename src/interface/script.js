@@ -650,6 +650,9 @@ window.addEventListener('storage', (event) => {
 window.addEventListener('archiwareProfileUpdated', () => {
   updateProfileAvatar();
 });
+window.addEventListener('archiwareUsernameUpdated', () => {
+  updateWelcomeUsername();
+});
 
 const resetArchiwareSession = () => {
   localStorage.clear();
