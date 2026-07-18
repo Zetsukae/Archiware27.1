@@ -29,6 +29,60 @@ if (shouldSkipSetup) {
   window.location.replace('src/interface/login/');
 }
 
+const getBrowserName = () => {
+  const userAgent = navigator.userAgent || '';
+  const userAgentData = navigator.userAgentData?.brands || [];
+
+  if (userAgentData.some((brand) => /firefox/i.test(brand.brand))) {
+    return 'firefox';
+  }
+
+  if (/chrome/i.test(userAgent) && !/edg/i.test(userAgent) && !/opr/i.test(userAgent)) {
+    return 'chrome';
+  }
+
+  if (/safari/i.test(userAgent) && !/chrome/i.test(userAgent)) {
+    return 'safari';
+  }
+
+  return 'unknown';
+};
+
+const browserWarning = document.getElementById('browserWarning');
+const browserWarningCloseButton = document.getElementById('browserWarningClose');
+
+const dismissBrowserWarning = () => {
+  if (!browserWarning) return;
+
+  browserWarning.classList.remove('is-visible');
+  browserWarning.classList.add('is-hiding');
+
+  window.setTimeout(() => {
+    browserWarning.classList.add('hidden');
+  }, 300);
+
+  sessionStorage.setItem('archiware_chrome_warning_dismissed', 'true');
+};
+
+if (browserWarning && browserWarningCloseButton) {
+  const browserName = getBrowserName();
+  const shouldShowWarning = browserName === 'chrome' && sessionStorage.getItem('archiware_chrome_warning_dismissed') !== 'true';
+
+  if (shouldShowWarning) {
+    browserWarning.classList.remove('hidden');
+    requestAnimationFrame(() => {
+      browserWarning.classList.add('is-visible');
+    });
+
+    browserWarningCloseButton.addEventListener('click', dismissBrowserWarning);
+    browserWarning.addEventListener('click', (event) => {
+      if (event.target === browserWarning) {
+        dismissBrowserWarning();
+      }
+    });
+  }
+}
+
 // Disable context menu for better experience
 document.addEventListener('contextmenu', (event) => {
   event.preventDefault();

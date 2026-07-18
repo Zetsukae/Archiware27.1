@@ -11,6 +11,15 @@
     <div class="ambient ambient--one"></div>
     <div class="ambient ambient--two"></div>
 
+    <div id="browserWarning" class="browser-warning hidden" role="dialog" aria-modal="true" aria-labelledby="browserWarningTitle">
+      <div class="browser-warning__backdrop"></div>
+      <div class="browser-warning__dialog">
+        <h2 id="browserWarningTitle">Browser compatibility notice</h2>
+        <p>For now, ArchiwareOS is unstable on Chrome. We recommend accessing it via Firefox.</p>
+        <button id="browserWarningClose" class="browser-warning__button" type="button">Ok</button>
+      </div>
+    </div>
+
     <main class="setup-shell">
       <section class="setup-card" aria-label="Setup wizard">
         <header class="setup-header">
