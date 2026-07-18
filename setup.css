@@ -19,15 +19,27 @@
 
 * {
   box-sizing: border-box;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
 }
 
 .hidden {
   display: none !important;
 }
 
+html,
+body {
+  height: 100%;
+}
+
 body {
   margin: 0;
-  min-height: 100vh;
+  min-height: 100svh;
+  min-height: 100dvh;
   font-family: Inter, "Segoe UI", sans-serif;
   color: var(--text);
   /* Immersive background */
@@ -35,9 +47,11 @@ body {
     linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)),
     url('src/public/wallpapers/wallpaper.png') center/cover no-repeat;
   overflow: hidden;
+  overscroll-behavior: none;
   display: flex;
   align-items: center;
   justify-content: center;
+  -webkit-overflow-scrolling: touch;
 }
 
 .browser-warning {
@@ -158,11 +172,16 @@ body {
   z-index: 1;
   width: 100%;
   max-width: 1005px;
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 24px;
 }
 
 .setup-card {
   min-height: 713px;
+  width: 100%;
 }
 
 /* setup card */
@@ -183,6 +202,7 @@ body {
   overflow: hidden;
   filter: url('#glass-distortion');
   user-select: none;
+  max-height: min(100%, 840px);
 }
 
 .setup-card input,
@@ -275,6 +295,7 @@ body {
   position: relative;
   min-height: 520px;
   overflow: hidden;
+  flex: 1;
 }
 
 .step {
@@ -390,9 +411,9 @@ body {
 /* Username and Avatar Row */
 .username-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 14px;
 }
 
 .username-row .glass-input {
@@ -418,7 +439,7 @@ body {
   justify-content: center;
   position: relative;
   flex-shrink: 0;
-  margin-top: 40px;
+  margin-top: 30px;
 }
 
 .avatar-button:hover {
@@ -457,8 +478,9 @@ body {
 
 .avatar-picker {
   position: absolute;
-  bottom: 100%;
+  top: calc(100% + 10px);
   right: 0;
+  bottom: auto;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 8px;
@@ -466,8 +488,9 @@ body {
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid var(--border);
   border-radius: 12px;
-  margin-bottom: 2px;
   max-width: 320px;
+  max-height: min(45vh, 280px);
+  overflow: auto;
   z-index: 1000;
   animation: avatarPickerOpen 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -803,6 +826,18 @@ body {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
   font-size: 12px;
   line-height: 1.5;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+.legal-card::-webkit-scrollbar {
+  display: block;
+  width: 6px;
+}
+
+.legal-card::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
 }
 
 .legal-card pre {
@@ -897,6 +932,225 @@ body {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #ffffff;
+}
+
+.a2hs-prompt {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.a2hs-prompt.visible {
+  display: flex;
+}
+
+.a2hs-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+}
+
+.a2hs-card {
+  position: relative;
+  z-index: 1;
+  width: min(460px, 100%);
+  border-radius: 24px;
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(18px);
+}
+
+.a2hs-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.a2hs-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.a2hs-content h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.a2hs-content p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.6;
+}
+
+.a2hs-instructions {
+  margin: 0;
+  padding-left: 20px;
+  color: rgba(255, 255, 255, 0.86);
+  list-style: disc;
+}
+
+.a2hs-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.a2hs-actions .ghost-btn {
+  flex: 1;
+  min-width: 120px;
+}
+
+@media (max-width: 780px) {
+  body {
+    min-height: 100svh;
+    min-height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: max(12px, env(safe-area-inset-top, 12px)) 0 max(12px, env(safe-area-inset-bottom, 12px));
+  }
+
+  .setup-card input,
+  .setup-card textarea,
+  .setup-card select {
+    font-size: 16px;
+  }
+
+  .setup-shell {
+    width: 100%;
+    min-height: 100%;
+    padding: 0 12px 0;
+  }
+
+  .setup-card {
+    padding: calc(16px + env(safe-area-inset-top, 0px) * 0.8) 20px 20px;
+    border-radius: 22px;
+    min-height: 0;
+    max-width: 100%;
+    max-height: calc(100dvh - 24px);
+    height: calc(100dvh - 24px);
+    overflow: hidden;
+    gap: 20px;
+  }
+
+  .setup-header {
+    padding-top: 8px;
+  }
+
+  .setup-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding-bottom: 14px;
+  }
+
+  .step-indicator {
+    padding: 0px 0 0;
+    min-height: 44px;
+    align-items: center;
+  }
+
+  .step-indicator::before {
+    top: 50%;
+    height: 8px;
+  }
+
+  .step-view {
+    position: relative;
+    min-height: 0;
+    flex: 1;
+    overflow: hidden;
+    padding-right: 0;
+  }
+
+  .step {
+    position: static;
+    transform: none;
+    display: none;
+  }
+
+  .step.active {
+    display: block;
+  }
+
+  .step-content {
+    padding-bottom: 0;
+  }
+
+  .step-content h2 {
+    font-size: 20px;
+  }
+
+  .username-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: nowrap;
+  }
+
+  .avatar-button {
+    width: 52px;
+    height: 52px;
+  }
+
+  .avatar-picker {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    right: auto;
+    width: min(100vw, 320px);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .toggle-row {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px 16px;
+  }
+
+  .wifi-actions {
+    flex-direction: column;
+  }
+
+  .wifi-password,
+  .ghost-btn.wifi-connect {
+    width: 100%;
+  }
+
+  .setup-actions {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 10px;
+  }
+
+  .ghost-btn {
+    width: auto;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .legal-card {
+    max-height: min(192px, 36vh);
+  }
 }
 
 [data-action="next"]:hover:not(:disabled), [data-action="finish"]:hover {

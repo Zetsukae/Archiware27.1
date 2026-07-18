@@ -83,6 +83,95 @@ if (browserWarning && browserWarningCloseButton) {
   }
 }
 
+const a2hsPrompt = document.getElementById('a2hsPrompt');
+const a2hsCloseButton = document.getElementById('a2hsClose');
+const a2hsActionButton = document.getElementById('a2hsAction');
+const a2hsDismissButton = document.getElementById('a2hsDismiss');
+const a2hsPromptTitle = document.getElementById('a2hsPromptTitle');
+const a2hsPromptMessage = document.getElementById('a2hsPromptMessage');
+const a2hsInstructions = document.getElementById('a2hsInstructions');
+let deferredInstallPrompt = null;
+const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isAndroid = /android/i.test(navigator.userAgent);
+const isMobileView = window.matchMedia('(max-width: 780px)').matches;
+const isStandalone = () => (
+  (typeof window.navigator !== 'undefined' && 'standalone' in window.navigator && window.navigator.standalone) ||
+  window.matchMedia('(display-mode: standalone)').matches
+);
+
+const hideA2hsPrompt = () => {
+  if (!a2hsPrompt) return;
+  a2hsPrompt.classList.remove('visible');
+  window.setTimeout(() => {
+    a2hsPrompt.classList.add('hidden');
+  }, 180);
+  localStorage.setItem('archiware_a2hs_dismissed', 'true');
+};
+
+const showA2hsPrompt = () => {
+  if (!a2hsPrompt) return;
+  if (isStandalone()) return;
+  if (localStorage.getItem('archiware_a2hs_dismissed') === 'true') return;
+  if (!isIos && !isAndroid) return;
+
+  if (isIos) {
+    a2hsPromptTitle.textContent = 'Better in fullscreen';
+    a2hsPromptMessage.textContent = 'Install ArchiwareOS to your home screen for a more immersive experience.';
+    a2hsInstructions.innerHTML = '<li>Open the share menu</li><li>Select "Add to Home Screen"</li>';
+    a2hsActionButton.textContent = 'Add';
+  } else if (isAndroid) {
+    a2hsPromptTitle.textContent = 'Better in fullscreen';
+    a2hsPromptMessage.textContent = 'Install ArchiwareOS to your home screen for a more immersive experience.';
+    a2hsInstructions.innerHTML = '<li>Open the browser menu</li><li>Select "Add to Home screen"</li>';
+    a2hsActionButton.textContent = 'Add';
+  }
+
+  a2hsPrompt.classList.remove('hidden');
+  requestAnimationFrame(() => a2hsPrompt.classList.add('visible'));
+};
+
+window.addEventListener('beforeinstallprompt', (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+});
+
+window.addEventListener('appinstalled', () => {
+  hideA2hsPrompt();
+});
+
+if (a2hsCloseButton) {
+  a2hsCloseButton.addEventListener('click', hideA2hsPrompt);
+}
+
+if (a2hsDismissButton) {
+  a2hsDismissButton.addEventListener('click', hideA2hsPrompt);
+}
+
+if (a2hsActionButton) {
+  a2hsActionButton.addEventListener('click', async () => {
+    if (isAndroid && deferredInstallPrompt) {
+      // Avoid calling the browser-native prompt because its language cannot be controlled.
+      // Instead, mark the A2HS prompt dismissed and hide our dialog; user can follow the
+      // on-screen instructions (which are in English) to add to home screen manually.
+      localStorage.setItem('archiware_a2hs_dismissed', 'true');
+      hideA2hsPrompt();
+      deferredInstallPrompt = null;
+      return;
+    }
+    hideA2hsPrompt();
+  });
+}
+
+const startA2hsPrompt = () => {
+  showA2hsPrompt();
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startA2hsPrompt);
+} else {
+  startA2hsPrompt();
+}
+
 // Disable context menu for better experience
 document.addEventListener('contextmenu', (event) => {
   event.preventDefault();
@@ -188,6 +277,14 @@ const renderButtons = () => {
     actionButton.textContent = 'Continue';
     actionButton.setAttribute('data-action', 'next');
     actionButton.disabled = legalMissing || usernameMissing || passwordTooWeak;
+  }
+
+  // On mobile, replace 'Continue' with 'Connect' for step 5 to save space
+  if (state.currentStep === 5 && typeof isMobileView !== 'undefined' && isMobileView) {
+    if (actionButton) {
+      actionButton.textContent = 'Connect';
+      actionButton.setAttribute('data-action', 'next');
+    }
   }
 };
 
@@ -406,12 +503,67 @@ const initializeAvatarSelection = () => {
 
   avatarButton.addEventListener('click', (e) => {
     e.stopPropagation();
-    avatarPicker.classList.toggle('hidden');
+
+    const isHidden = avatarPicker.classList.contains('hidden');
+
+    if (!isHidden) {
+      // hide and clear floating styles
+      avatarPicker.classList.add('hidden');
+      avatarPicker.style.position = '';
+      avatarPicker.style.left = '';
+      avatarPicker.style.right = '';
+      avatarPicker.style.top = '';
+      avatarPicker.style.transform = '';
+      avatarPicker.style.maxHeight = '';
+      avatarPicker.style.overflow = '';
+      return;
+    }
+
+    // show first so we can measure
+    avatarPicker.classList.remove('hidden');
+    avatarPicker.style.position = 'fixed';
+    avatarPicker.style.left = '50%';
+    avatarPicker.style.transform = 'translateX(-50%)';
+    avatarPicker.style.right = 'auto';
+    avatarPicker.style.maxHeight = '45vh';
+    avatarPicker.style.overflow = 'auto';
+
+    // compute desired top: try to place above the username row; if not enough space, center on screen
+    const usernameRow = avatarButton.closest('.username-row') || document.querySelector('.username-row');
+    const rowRect = usernameRow ? usernameRow.getBoundingClientRect() : null;
+    const pickerRect = avatarPicker.getBoundingClientRect();
+
+    let topPx = (window.innerHeight - pickerRect.height) / 2; // default center
+
+    if (rowRect) {
+      const aboveTop = rowRect.top - pickerRect.height - 12; // 12px gap
+      if (aboveTop >= 8) {
+        topPx = aboveTop;
+      } else {
+        // if not enough room above, try below the row
+        const belowTop = rowRect.bottom + 12;
+        if (belowTop + pickerRect.height <= window.innerHeight - 8) {
+          topPx = belowTop;
+        }
+      }
+    }
+
+    // clamp to viewport
+    topPx = Math.max(8, Math.min(topPx, window.innerHeight - pickerRect.height - 8));
+    avatarPicker.style.top = `${Math.round(topPx)}px`;
   });
 
+  // hide picker when clicking outside (works with fixed positioning)
   document.addEventListener('click', (e) => {
     if (e.target !== avatarButton && !avatarPicker.contains(e.target)) {
       avatarPicker.classList.add('hidden');
+      avatarPicker.style.position = '';
+      avatarPicker.style.left = '';
+      avatarPicker.style.right = '';
+      avatarPicker.style.top = '';
+      avatarPicker.style.transform = '';
+      avatarPicker.style.maxHeight = '';
+      avatarPicker.style.overflow = '';
     }
   });
 
@@ -524,6 +676,15 @@ toggleButtons.forEach((toggle) => {
 
 initToggleState();
 
+// On small screens, hide the 'Localization' toggle row (keep Auto-drivers and Error reporting)
+if (isMobileView) {
+  const localizationToggle = document.querySelector('.toggle[data-option="localization"]');
+  if (localizationToggle) {
+    const row = localizationToggle.closest('.toggle-row');
+    if (row) row.style.display = 'none';
+  }
+}
+
 const generateWifiName = () => {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
   const length = Math.floor(Math.random() * 13) + 8; // 8 to 20 characters
@@ -551,57 +712,78 @@ wifiButtons.forEach((button, index) => {
     wifiButtons.forEach((item) => item.classList.remove('active'));
     button.classList.add('active');
     selectedNetwork = button.dataset.network;
-    wifiFeedback.textContent = 'Enter the password to connect.';
+    if (wifiFeedback) wifiFeedback.textContent = 'Enter the password to connect.';
   });
 });
 
-if (wifiConnectButton) {
-  const lockConnectionUI = (locked) => {
-    wifiConnectButton.disabled = locked;
-    wifiPassword.disabled = locked;
-    wifiButtons.forEach((button) => {
-      button.disabled = locked;
-      button.style.pointerEvents = locked ? 'none' : '';
-    });
-    backButton.disabled = locked;
-    actionButton.disabled = locked;
-  };
+// On small screens, hide the middle Wi‑Fi network to show only 1 and 3
+if (isMobileView && wifiButtons.length > 2) {
+  if (wifiButtons[1]) wifiButtons[1].style.display = 'none';
+}
 
-  wifiConnectButton.addEventListener('click', () => {
-    const password = wifiPassword?.value.trim();
+// Hide the inline wifi connect button on mobile to favour the main action button
+if (isMobileView && wifiConnectButton) {
+  wifiConnectButton.style.display = 'none';
+}
 
-    if (!password) {
-      wifiFeedback.textContent = 'A password is required to connect.';
-      return;
-    }
+// Lock/unlock all relevant controls during connection
+const lockConnectionUI = (locked) => {
+  if (wifiConnectButton) wifiConnectButton.disabled = locked;
+  if (wifiPassword) wifiPassword.disabled = locked;
+  wifiButtons.forEach((button) => {
+    button.disabled = locked;
+    button.style.pointerEvents = locked ? 'none' : '';
+  });
+  if (backButton) backButton.disabled = locked;
+  if (actionButton) actionButton.disabled = locked;
+};
 
-    if (password.length < 4) {
-      wifiFeedback.textContent = 'Password must be at least 4 characters.';
-      return;
-    }
+// Centralized connect attempt used by both the inline button and the main action button on mobile
+const attemptConnect = () => {
+  const password = wifiPassword?.value.trim();
 
-    wifiFeedback.textContent = 'Attempting to connect…';
-    lockConnectionUI(true);
-    wifiConnectButton.textContent = 'Connecting…';
+  if (!password) {
+    if (wifiFeedback) wifiFeedback.textContent = 'A password is required to connect.';
+    return;
+  }
 
-    setTimeout(() => {
-      const isSuccess = selectedNetwork === connectableNetwork;
+  if (password.length < 4) {
+    if (wifiFeedback) wifiFeedback.textContent = 'Password must be at least 4 characters.';
+    return;
+  }
 
-      if (isSuccess) {
-        wifiFeedback.textContent = `Connected to ${connectableNetwork}. Continuing…`;
-        wifiConnectButton.textContent = 'Connected';
-        if (state.currentStep === 5) {
-          setTimeout(() => {
-            goToStep(6);
-            startSetupSequence();
-          }, 500);
-        }
-      } else {
-        wifiFeedback.textContent = `Unable to connect to ${selectedNetwork}. Please try another network or check the password.`;
-        wifiConnectButton.textContent = 'Connect';
-        lockConnectionUI(false);
+  if (wifiFeedback) wifiFeedback.textContent = 'Attempting to connect…';
+  lockConnectionUI(true);
+
+  if (wifiConnectButton) wifiConnectButton.textContent = 'Connecting…';
+  if (actionButton) actionButton.textContent = isMobileView ? 'Connecting…' : actionButton.textContent;
+
+  setTimeout(() => {
+    const isSuccess = selectedNetwork === connectableNetwork;
+
+    if (isSuccess) {
+      if (wifiFeedback) wifiFeedback.textContent = `Connected to ${connectableNetwork}. Continuing…`;
+      if (wifiConnectButton) wifiConnectButton.textContent = 'Connected';
+      if (state.currentStep === 5) {
+        setTimeout(() => {
+          goToStep(6);
+          startSetupSequence();
+        }, 500);
       }
-    }, 4500);
+    } else {
+      if (wifiFeedback) wifiFeedback.textContent = `Unable to connect to ${selectedNetwork}. Please try another network or check the password.`;
+      if (wifiConnectButton) wifiConnectButton.textContent = 'Connect';
+      lockConnectionUI(false);
+      if (actionButton) actionButton.textContent = isMobileView ? 'Connect' : actionButton.textContent;
+    }
+  }, 4500);
+};
+
+// Wire inline button if present (desktop or when not hidden)
+if (wifiConnectButton) {
+  wifiConnectButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    attemptConnect();
   });
 }
 
@@ -613,7 +795,12 @@ document.addEventListener('click', (event) => {
 
   const action = button.getAttribute('data-action');
   if (action === 'next') {
-    handleNext();
+    // If we're on step 5 in mobile, use the Connect flow instead of the regular next
+    if (state.currentStep === 5 && typeof isMobileView !== 'undefined' && isMobileView) {
+      attemptConnect();
+    } else {
+      handleNext();
+    }
   } else if (action === 'back') {
     handleBack();
   } else if (action === 'finish') {

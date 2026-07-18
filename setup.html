@@ -2,7 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#060816" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="ArchiwareOS" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="apple-mobile-web-app-orientation" content="portrait" />
     <title>ArchiwareOS Setup</title>
     <link rel="stylesheet" href="setup.css" />
     <link rel="icon" href="src/public/icons/archiware.png" sizes="any">
@@ -17,6 +24,25 @@
         <h2 id="browserWarningTitle">Browser compatibility notice</h2>
         <p>For now, ArchiwareOS is unstable on Chrome. We recommend accessing it via Firefox.</p>
         <button id="browserWarningClose" class="browser-warning__button" type="button">Ok</button>
+      </div>
+    </div>
+
+    <div id="a2hsPrompt" class="a2hs-prompt hidden" role="dialog" aria-modal="true" aria-labelledby="a2hsPromptTitle">
+      <div class="a2hs-backdrop"></div>
+      <div class="a2hs-card">
+        <button id="a2hsClose" class="a2hs-close" type="button" aria-label="Close prompt">×</button>
+        <div class="a2hs-content">
+          <h2 id="a2hsPromptTitle">Better in fullscreen</h2>
+          <p id="a2hsPromptMessage">Install ArchiwareOS to your home screen for a more immersive experience.</p>
+          <ul class="a2hs-instructions" id="a2hsInstructions">
+            <li>Open the share menu</li>
+            <li>Select "Add to Home Screen"</li>
+          </ul>
+          <div class="a2hs-actions">
+            <button id="a2hsAction" class="ghost-btn">Add</button>
+            <button id="a2hsDismiss" class="ghost-btn">Later</button>
+          </div>
+        </div>
       </div>
     </div>
 

@@ -2,7 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#060816" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="ArchiwareOS" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="apple-mobile-web-app-orientation" content="portrait" />
   <title>Archiware OS</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" href="../public/icons/archiware.png" sizes="any">
@@ -180,6 +187,7 @@
       </div>
 
       <div class="finder-toolbar">
+        <button id="liquid-glass-toggle" class="settings-sidebar-toggle" type="button" aria-label="Show settings menu">&gt;</button>
         <div class="finder-title">Settings</div>
       </div>
     </div>
@@ -329,7 +337,6 @@
             <div class="settings-section">
               <h3>Dock</h3>
               <div class="settings-row settings-toggle-row"><span>Show dock labels</span><label class="toggle-switch"><input type="checkbox" id="dockLabelsToggle" checked /><span class="toggle-slider"></span></label></div>
-              <div class="settings-row settings-toggle-row"><span>Auto-hide dock</span><label class="toggle-switch"><input type="checkbox" id="dockAutoHideToggle" /><span class="toggle-slider"></span></label></div>
             </div>
           </div>
 

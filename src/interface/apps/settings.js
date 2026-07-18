@@ -219,6 +219,8 @@ export const initSettingsWindow = (windowEl) => {
   const panels = windowEl.querySelectorAll('[data-settings-panel]');
   let updateSectionTimer = null;
   const updatePanel = windowEl.querySelector('[data-settings-panel="update"]');
+  const toggleSidebarButton = windowEl.querySelector('.settings-sidebar-toggle');
+  const settingsSidebar = windowEl.querySelector('.settings-sidebar');
   const transparencySlider = windowEl.querySelector('#transparencySlider');
   const darkModeToggle = windowEl.querySelector('#darkModeToggle');
   const soundAccessButton = windowEl.querySelector('#soundAccessButton');
@@ -263,9 +265,34 @@ export const initSettingsWindow = (windowEl) => {
     }
   };
 
+  const updateSidebarVisibility = (showSidebar) => {
+    if (!toggleSidebarButton) return;
+    windowEl.classList.toggle('settings-sidebar-hidden', !showSidebar);
+    toggleSidebarButton.textContent = showSidebar ? '<' : '>';
+    toggleSidebarButton.setAttribute('aria-label', showSidebar ? 'Hide settings menu' : 'Show settings menu');
+  };
+
+  const isMobileSettingsView = window.innerWidth <= 900;
+
   tabItems.forEach((item) => {
     item.addEventListener('click', () => setActiveTab(item.dataset.settingsTab));
   });
+
+  if (toggleSidebarButton) {
+    toggleSidebarButton.addEventListener('click', () => {
+      const isVisible = !windowEl.classList.contains('settings-sidebar-hidden');
+      updateSidebarVisibility(!isVisible);
+    });
+    toggleSidebarButton.style.display = isMobileSettingsView ? 'inline-flex' : 'none';
+  }
+
+  if (isMobileSettingsView) {
+    updateSidebarVisibility(false);
+    setActiveTab('general');
+  } else {
+    updateSidebarVisibility(true);
+    setActiveTab('account');
+  }
 
   if (transparencySlider) {
     transparencySlider.value = appSettings.transparency;
@@ -376,6 +403,9 @@ export const initSettingsWindow = (windowEl) => {
   }
 
   if (dockAutoHideToggle) {
+    if (isMobileSettingsView) {
+      dockAutoHideToggle.closest('.settings-row')?.classList.add('hidden');
+    }
     dockAutoHideToggle.checked = appSettings.dockAutoHide;
     dockAutoHideToggle.addEventListener('change', (event) => {
       appSettings.dockAutoHide = event.target.checked;

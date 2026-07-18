@@ -509,7 +509,8 @@ const launchUnavailableApp = (appName, message = 'Please update the app to launc
 
 function updateClock() {
   if (!clock) return;
-  clock.textContent = new Date().toLocaleTimeString('fr-FR', {
+  // Use English locale for site-wide consistency
+  clock.textContent = new Date().toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit'
   });
@@ -1061,11 +1062,25 @@ const createAppWindow = (appId) => {
   clone.setAttribute('aria-hidden', 'false');
   clone.setAttribute('aria-label', appId === 'explorer' ? 'Explorer' : appId === 'settings' ? 'Settings' : appId === 'editor' ? 'Text Editor' : appId === 'pluberry' ? 'Pluberry' : appId === 'browser' ? 'Browser' : appId === 'terminal' ? 'Terminal' : '');
   clone.dataset.appLabel = appId === 'explorer' ? 'Explorer' : appId === 'settings' ? 'Settings' : appId === 'editor' ? 'Text Editor' : appId === 'pluberry' ? 'Pluberry' : appId === 'browser' ? 'Browser' : appId === 'terminal' ? 'Terminal' : '';
-  clone.style.width = '900px';
-  clone.style.height = '560px';
-  const position = getNextWindowPosition(900, 560);
-  clone.style.left = `${position.x}px`;
-  clone.style.top = `${position.y}px`;
+  const isDesktopView = window.innerWidth > 900;
+  const viewWidth = isDesktopView ? Math.min(900, window.innerWidth - 80) : window.innerWidth - 24;
+  const top = 12;
+  const dockTop = dock?.getBoundingClientRect().top || window.innerHeight;
+  const viewHeight = isDesktopView ? Math.min(560, window.innerHeight - 80) : Math.max(120, Math.min(window.innerHeight - 24, dockTop - top));
+  if (!isDesktopView) {
+    clone.classList.add('is-fullscreen');
+    clone.style.width = `${viewWidth}px`;
+    clone.style.height = `${viewHeight}px`;
+    clone.style.left = '12px';
+    clone.style.top = `${top}px`;
+  } else {
+    const left = Math.max(24, Math.round((window.innerWidth - viewWidth) / 2));
+    const topPos = Math.max(24, Math.round((window.innerHeight - viewHeight) / 2));
+    clone.style.width = `${viewWidth}px`;
+    clone.style.height = `${viewHeight}px`;
+    clone.style.left = `${left}px`;
+    clone.style.top = `${topPos}px`;
+  }
   document.querySelector('.desktop')?.appendChild(clone);
 
   const createResizeHandle = (targetWindow) => {
@@ -1087,6 +1102,7 @@ const createAppWindow = (appId) => {
   if (appId === 'terminal') initTerminalWindow(clone);
   windows = document.querySelectorAll('.window');
   focusWindow(clone);
+  updateDesktopUiVisibility();
   setDockOpenState(appId, true);
   refreshRunningDockApps();
   enforceMemoryLimit();
@@ -1261,10 +1277,13 @@ const MIN_WINDOW_WIDTH = 360;
 const MIN_WINDOW_HEIGHT = 240;
 
 const startResizingWindow = (win, event) => {
-  if (win.id === 'mainWindow' || win.classList.contains('is-fullscreen')) return;
-  if (event.button !== 0) return;
+  if (win.id === 'mainWindow') return;
+  if (event.pointerType === 'mouse' && event.button !== 0) return;
   event.preventDefault();
   event.stopPropagation();
+  if (win.classList.contains('is-fullscreen')) {
+    win.classList.remove('is-fullscreen');
+  }
 
   const startX = event.clientX;
   const startY = event.clientY;
@@ -1317,11 +1336,17 @@ const startResizingWindow = (win, event) => {
     document.body.style.cursor = '';
 
     document.removeEventListener('mousemove', handleResize);
+    document.removeEventListener('pointermove', handleResize);
     document.removeEventListener('mouseup', stopResize);
+    document.removeEventListener('pointerup', stopResize);
+    document.removeEventListener('pointercancel', stopResize);
   };
 
   document.addEventListener('mousemove', handleResize);
+  document.addEventListener('pointermove', handleResize);
   document.addEventListener('mouseup', stopResize);
+  document.addEventListener('pointerup', stopResize);
+  document.addEventListener('pointercancel', stopResize);
 };
 
 const addWindowResizeHandles = () => {
@@ -1339,12 +1364,31 @@ const handleResizeGripMouseDown = (event) => {
   const handle = event.target.closest('.window__resize-handle');
   if (!handle) return;
   const win = handle.closest('.window');
-  if (!win || win.id === 'mainWindow' || win.classList.contains('is-fullscreen')) return;
-  if (event.button !== 0) return;
+  if (!win || win.id === 'mainWindow') return;
+  if (event.pointerType === 'mouse' && event.button !== 0) return;
   startResizingWindow(win, event);
 };
 
 document.addEventListener('mousedown', handleResizeGripMouseDown);
+document.addEventListener('pointerdown', handleResizeGripMouseDown);
+
+const syncFullscreenWindowBounds = (win) => {
+  if (!win || !win.classList.contains('is-fullscreen')) return;
+  const width = Math.max(window.innerWidth - 24, 360);
+  const top = 12;
+  const dockTop = dock?.getBoundingClientRect().top || window.innerHeight;
+  const height = Math.max(120, Math.min(window.innerHeight - 24, dockTop - top));
+  win.style.width = `${width}px`;
+  win.style.height = `${height}px`;
+  win.style.left = '12px';
+  win.style.top = `${top}px`;
+};
+
+const syncFullscreenWindows = () => {
+  document.querySelectorAll('.window.is-fullscreen').forEach(syncFullscreenWindowBounds);
+};
+
+window.addEventListener('resize', syncFullscreenWindows);
 
 const startDraggingWindow = (win, event) => {
   // Don't initiate dragging when interacting with form controls or buttons
@@ -1447,6 +1491,7 @@ const bindWindowInteractions = (win) => {
         });
         setDockOpenState(currentAppId, hasOpenWindowsForApp(currentAppId));
         refreshRunningDockApps();
+        updateDesktopUiVisibility();
       }
     });
   }
@@ -1461,6 +1506,7 @@ const bindWindowInteractions = (win) => {
         if (currentAppId) {
           setDockOpenState(currentAppId, hasOpenWindowsForApp(currentAppId));
           refreshRunningDockApps();
+          updateDesktopUiVisibility();
           const dockItem = document.querySelector(`.dock__item[data-app="${currentAppId}"]`);
           if (dockItem) dockItem.classList.remove('is-window-hover', 'is-window-focused');
         }
@@ -1474,6 +1520,7 @@ const bindWindowInteractions = (win) => {
             win.classList.add('is-minimized', 'minimized-hidden');
             win.setAttribute('aria-hidden', 'true');
             win.style.transform = '';
+            updateDesktopUiVisibility();
           }, { once: true });
         } else {
           win.classList.add('is-minimized', 'minimized-hidden');

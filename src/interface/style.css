@@ -11,6 +11,11 @@
   user-select: none;
 }
 
+html,
+body {
+  height: 100%;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -19,6 +24,12 @@ body {
   color: #f5f7ff;
   background: url("../public/wallpapers/wallpaper.png") center/cover no-repeat;
   background-attachment: fixed;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.desktop__topbar {
+  padding-top: max(12px, env(safe-area-inset-top));
 }
 
 body::before {
@@ -41,6 +52,7 @@ button {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  overflow: hidden;
 }
 
 .desktop__topbar {
@@ -932,6 +944,7 @@ button {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 8px 16px rgba(0, 0, 0, 0.08);
   cursor: nwse-resize;
   pointer-events: auto;
+  touch-action: none;
   z-index: 4;
 }
 
@@ -1169,7 +1182,7 @@ button {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34), 0 0 18px -8px rgba(255, 255, 255, 0.3);
   position: fixed;
   left: 50%;
-  bottom: 14px;
+  bottom: calc(20px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
   z-index: 150;
   overflow: visible;
@@ -1223,6 +1236,10 @@ button {
 }
 
 .dock__group--running.is-empty {
+  display: none;
+}
+
+.dock__item[data-app="music"] {
   display: none;
 }
 
@@ -1294,19 +1311,190 @@ button {
   border: 0;
 }
 
-@media (max-width: 700px) {
-  .desktop {
-    padding: 16px 14px 18px;
+@media (max-width: 1px) /* disabled responsive: force desktop layout on all sizes */ {
+  body {
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
-  .dock__item {
-    width: 60px;
-    height: 60px;
-    font-size: 1.7rem;
+  .desktop {
+    min-height: auto;
+    padding: 14px 12px 92px;
+  }
+
+  .desktop__topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 0 8px;
+  }
+
+  .desktop__content {
+    display: block;
+    padding-top: 10px;
   }
 
   .app-grid {
+    display: grid;
     grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .dock {
+    width: min(100vw - 24px, 100%);
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 10px;
+    padding: 10px 12px 12px;
+  }
+
+  .dock__inner {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .dock__item {
+    width: 54px;
+    height: 54px;
+  }
+
+  .window {
+    left: 10px !important;
+    top: 10px !important;
+    width: calc(100vw - 20px) !important;
+    max-width: calc(100vw - 20px);
+    height: auto !important;
+    max-height: calc(100vh - 120px) !important;
+    border-radius: 20px;
+  }
+
+  .window__header {
+    padding: 12px 14px;
+  }
+
+  .window__control {
+    opacity: 1;
+    transform: none;
+  }
+
+  .window__resize-handle {
+    display: block;
+    width: 28px;
+    height: 28px;
+    right: 12px;
+    bottom: 12px;
+    cursor: nwse-resize;
+    touch-action: none;
+  }
+
+  #explorerWindow,
+  #settingsWindow {
+    width: calc(100vw - 20px) !important;
+    max-width: calc(100vw - 20px) !important;
+    height: auto !important;
+    max-height: calc(100vh - 130px) !important;
+  }
+
+  .finder-layout,
+  .settings-layout {
+    flex-direction: column;
+  }
+
+  .finder-sidebar,
+  .settings-sidebar {
+    width: 100%;
+    min-width: 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 12px 10px;
+  }
+
+  .finder-main,
+  .settings-main {
+    width: 100%;
+    padding: 12px 10px 18px;
+  }
+
+  .settings-sidebar .settings-nav-list {
+    position: static;
+    height: auto;
+    padding-bottom: 0;
+  }
+
+  .settings-sidebar .update-bottom,
+  .settings-sidebar .about-bottom,
+  .settings-sidebar .settings-nav-divider--bottom {
+    position: static;
+    margin: 0;
+  }
+
+  .finder-search {
+    width: 100%;
+    max-width: 100%;
+    padding-right: 12px;
+  }
+
+  .finder-toolbar {
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .window__title {
+    left: 15px;
+    transform: none;
+    position: relative;
+    width: auto;
+  }
+
+  .os-launcher-panel {
+    width: calc(100vw - 32px);
+    max-width: calc(100vw - 32px);
+  }
+
+  .os-launcher-app-list {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
+  .shortcut-dropdown {
+    width: calc(100vw - 34px);
+    max-width: calc(100vw - 34px);
+    right: auto;
+    left: 0;
+  }
+
+  .desktop-folders {
+    position: relative;
+    left: auto;
+    top: auto;
+    grid-auto-flow: row;
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    width: 100%;
+    max-width: 100%;
+    margin-top: 8px;
+  }
+
+  .desktop-item {
+    width: 100%;
+    min-height: auto;
+    padding: 10px 8px 10px;
+  }
+
+  .desktop-file__icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .desktop-file__icon img {
+    width: 28px;
+    height: 28px;
+  }
+
+  .finder-sidebar li,
+  .settings-sidebar .settings-nav-list li {
+    padding: 10px 12px;
   }
 }
 
@@ -1476,17 +1664,46 @@ button {
   flex-direction: column;
 }
 
-.settings-sidebar {
-  position: relative; /* allow absolute pinning of footer items */
-}
+  @media (max-width: 900px) {
+    .window[id^="settingsWindow"] .settings-sidebar,
+    .window[id^="explorerWindow"] .finder-sidebar {
+      width: 138px !important;
+      min-width: 138px !important;
+      max-width: 138px !important;
+    }
 
-.settings-nav-divider {
-  height: 1px;
-  margin: 5px 0 6px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.14), transparent);
-}
+    .window[id^="settingsWindow"] .settings-sidebar-toggle {
+      display: inline-flex !important;
+    }
 
-.settings-sidebar .settings-nav-list .settings-nav-divider,
+    .window[id^="settingsWindow"] .finder-toolbar {
+      justify-content: flex-start;
+      padding-left: 48px;
+      padding-right: 60px;
+    }
+
+    .window[id^="settingsWindow"] .finder-title {
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .window[id^="settingsWindow"] .settings-sidebar-toggle {
+      right: 12px;
+      top: 50%;
+    }
+
+    .window[id^="settingsWindow"].settings-sidebar-hidden .settings-sidebar {
+      display: none !important;
+    }
+
+    .window[id^="settingsWindow"].settings-sidebar-hidden .settings-main {
+      width: 100% !important;
+    }
+
+    .window[id^="settingsWindow"].settings-sidebar-hidden .settings-sidebar {
+      min-width: 0 !important;
+    }
+  }
 .settings-sidebar .settings-nav-list .settings-nav-divider--bottom {
   pointer-events: none;
   cursor: default;
@@ -2252,6 +2469,10 @@ progress::-moz-progress-bar {
   max-height: 0;
 }
 
+.hidden {
+  display: none !important;
+}
+
 .shortcut-dropdown h2 {
   margin: 0 0 10px;
   font-size: 1rem;
@@ -2602,14 +2823,14 @@ body.dark-mode .settings-section {
 :root { --finder-controls-gap: 64px; }
 .finder-header .finder-navigation {
   position: absolute;
-  left: 12px;
+  left: 10px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 4;
   transition: transform 220ms cubic-bezier(.2,.9,.2,1);
 }
 .finder-header:hover .finder-navigation {
-  transform: translateY(-50%) translateX(var(--finder-controls-gap));
+  transform: translateY(-50%) translateX(calc(var(--finder-controls-gap) + 4px));
 }
 
 .finder-toolbar {
@@ -2617,7 +2838,7 @@ body.dark-mode .settings-section {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding-right: 12px;
+  padding-right: 8px;
 }
 
 .finder-navigation { display: flex; gap: 6px; }
@@ -2640,6 +2861,13 @@ body.dark-mode .settings-section {
   color: #fff;
 }
 
+@media (max-width: 900px) {
+  .window[id^="explorerWindow"] .finder-navigation,
+  .window[id^="explorerWindow"] .toolbar-btn {
+    display: none !important;
+  }
+}
+
 /* Place Save button top-left inside the editor window (after controls) */
 .window[id^="textEditorWindow"] .toolbar-btn[data-action="save"] {
   position: absolute;
@@ -2657,9 +2885,19 @@ body.dark-mode .settings-section {
   font-weight: 600;
   color: #fff;
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 70px;
+  transform: translateX(0);
   text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+@media (min-width: 901px) {
+  .window[id^="explorerWindow"] .finder-toolbar {
+    justify-content: center;
+  }
+  .window[id^="explorerWindow"] .finder-title {
+    left: 50%;
+    transform: translateX(-50%);
+  }
 }
 
 .finder-search-container { margin-left: auto; }
@@ -2799,7 +3037,7 @@ body.dark-mode .settings-section {
 /* Desktop folders container */
 .desktop-folders {
   position: absolute;
-  left: 24px;
+  left: 14px;
   top: 24px;
   display: grid;
   grid-auto-flow: column;
@@ -2843,7 +3081,7 @@ body.dark-mode .settings-section {
   align-items: center;
   justify-content: center;
   border-radius: 18px;
-  padding: 12px 8px 10px;
+  padding: 12px 6px 10px;
   background: rgba(255, 255, 255, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.18);
   color: #fff;
@@ -2952,4 +3190,104 @@ body.dark-mode .settings-section {
 .desktop-item.is-renaming .desktop-folder__name,
 .desktop-item.is-renaming .desktop-file__name {
   display: none;
+}
+
+/* Ensure desktop-style dock, Archiware button and clock remain visible on small screens */
+@media (max-width: 1px) /* disabled responsive: force desktop layout on all sizes */ {
+  .desktop__topbar {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 0 8px !important;
+  }
+
+  .desktop__topbar .topbar-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .status-pill,
+  #clock,
+  #profileTrigger {
+    opacity: 1 !important;
+    transform: none !important;
+    pointer-events: auto !important;
+    display: inline-flex !important;
+  }
+
+  .dock {
+    width: max-content !important;
+    padding: 8px 10px 10px !important;
+    border-radius: 18px !important;
+    left: 50% !important;
+    bottom: 14px !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .dock__inner {
+    flex-wrap: nowrap !important;
+    justify-content: center !important;
+  }
+
+  .dock__item {
+    width: 52px !important;
+    height: 52px !important;
+  }
+}
+
+#liquid-glass-toggle {
+  position: absolute !important;
+  top: 50% !important;
+  left: 65px !important;
+  transform: translateY(-50%) !important;
+  z-index: 9999 !important;
+
+  width: 30px !important;
+  height: 30px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  
+  border: none !important;
+  background: none !important;
+  outline: none !important;
+  cursor: pointer !important;
+  webkit-appearance: none !important;
+  appearance: none !important;
+  
+  font-family: inherit !important;
+  font-size: 18px !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.05) 100%) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border-radius: 60% 40% 60% 40% / 40% 60% 40% 60% !important;
+  
+  box-shadow: 
+    inset 0 4px 6px rgba(255, 255, 255, 0.4),
+    inset 0 -4px 6px rgba(0, 0, 0, 0.2),
+    0 8px 16px rgba(0, 0, 0, 0.15) !important;
+  
+  transition: all 0.5s ease-in-out !important;
+}
+
+#liquid-glass-toggle:hover {
+  border-radius: 40% 60% 40% 60% / 60% 40% 60% 40% !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.1) 100%) !important;
+  transform: translateY(-50%) scale(1.08) rotate(5deg) !important;
+  box-shadow: 
+    inset 0 6px 8px rgba(255, 255, 255, 0.5),
+    inset 0 -4px 6px rgba(0, 0, 0, 0.15),
+    0 12px 20px rgba(0, 0, 0, 0.25) !important;
+}
+
+#liquid-glass-toggle:active {
+  transform: translateY(-50%) scale(0.95) !important;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.3),
+    0 4px 8px rgba(0, 0, 0, 0.15) !important;
 }

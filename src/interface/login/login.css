@@ -23,6 +23,7 @@ body {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  -webkit-text-size-adjust: 100%;
 }
 
 .login-background {
@@ -154,10 +155,23 @@ body {
   border-radius: 12px;
   padding: 12px 14px;
   color: var(--text);
-  font-size: 14px;
+  font-size: 16px;
   font-family: inherit;
   outline: none;
   transition: all 0.2s ease;
+  -webkit-text-size-adjust: 100%;
+}
+
+@media (max-width: 780px) {
+  .form-group input {
+    font-size: 16px;
+  }
+
+  .login-time.is-active {
+    top: 12%;
+    transform: translate(-50%, 0);
+    font-size: 56px;
+  }
 }
 
 .form-group input::placeholder {

@@ -1,0 +1,17 @@
+{
+  "name": "ArchiwareOS",
+  "short_name": "Archiware",
+  "start_url": "/setup.html",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#060816",
+  "theme_color": "#060816",
+  "icons": [
+    {
+      "src": "src/public/icons/archiware.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
