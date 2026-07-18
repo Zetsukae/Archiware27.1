@@ -452,6 +452,7 @@ export const initSettingsWindow = (windowEl) => {
       const avatarUrl = resolveAvatarUrl(avatarValue);
       localStorage.setItem('archiware_profile', avatarUrl);
       updateAccountAvatarUi();
+      window.dispatchEvent(new Event('archiwareProfileUpdated'));
       hideAvatarPicker();
     });
   });
@@ -469,6 +470,7 @@ export const initSettingsWindow = (windowEl) => {
         const dataUrl = loadEvent.target.result;
         localStorage.setItem('archiware_profile', dataUrl);
         updateAccountAvatarUi();
+        window.dispatchEvent(new Event('archiwareProfileUpdated'));
         hideAvatarPicker();
       };
       reader.readAsDataURL(file);
