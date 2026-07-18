@@ -29,7 +29,11 @@ const defaultSettings = {
   dockLabels: true,
   dockAutoHide: false,
   soundOutput: 70,
-  soundInput: 75
+  soundInput: 75,
+  protonEnabled: true,
+  wineEnabled: true,
+  protonVersion: 'GE-Proton',
+  optimizeForGaming: false
 };
 
 const loadAppSettings = () => {
@@ -219,6 +223,11 @@ export const initSettingsWindow = (windowEl) => {
   const soundInputSlider = windowEl.querySelector('#soundInputSlider');
   const notificationsToggle = windowEl.querySelector('#notificationsToggle');
   const powerSaverToggle = windowEl.querySelector('#powerSaverToggle');
+  const protonToggle = windowEl.querySelector('#protonToggle');
+  const wineToggle = windowEl.querySelector('#wineToggle');
+  const protonVersionField = windowEl.querySelector('#protonVersionField');
+  const protonVersionSelect = windowEl.querySelector('#protonVersionSelect');
+  const optimizeGamingToggle = windowEl.querySelector('#optimizeGamingToggle');
   const dockLabelsToggle = windowEl.querySelector('#dockLabelsToggle');
   const dockAutoHideToggle = windowEl.querySelector('#dockAutoHideToggle');
   const wallpaperGrid = windowEl.querySelector('#wallpaperGrid');
@@ -294,6 +303,52 @@ export const initSettingsWindow = (windowEl) => {
     powerSaverToggle.checked = appSettings.powerSaver;
     powerSaverToggle.addEventListener('change', (event) => {
       appSettings.powerSaver = event.target.checked;
+      saveAppSettings();
+    });
+  }
+
+  const syncProtonVersionVisibility = () => {
+    const isEnabled = Boolean(appSettings.protonEnabled);
+    if (protonVersionField) {
+      protonVersionField.classList.toggle('is-hidden', !isEnabled);
+      protonVersionField.setAttribute('aria-hidden', String(!isEnabled));
+    }
+    if (protonVersionSelect) {
+      protonVersionSelect.disabled = !isEnabled;
+    }
+  };
+
+  if (protonToggle) {
+    protonToggle.checked = appSettings.protonEnabled;
+    protonToggle.addEventListener('change', (event) => {
+      appSettings.protonEnabled = event.target.checked;
+      syncProtonVersionVisibility();
+      saveAppSettings();
+    });
+  }
+
+  if (wineToggle) {
+    wineToggle.checked = appSettings.wineEnabled;
+    wineToggle.addEventListener('change', (event) => {
+      appSettings.wineEnabled = event.target.checked;
+      saveAppSettings();
+    });
+  }
+
+  if (protonVersionSelect) {
+    protonVersionSelect.value = appSettings.protonVersion || 'GE-Proton';
+    protonVersionSelect.addEventListener('change', (event) => {
+      appSettings.protonVersion = event.target.value;
+      saveAppSettings();
+    });
+  }
+
+  syncProtonVersionVisibility();
+
+  if (optimizeGamingToggle) {
+    optimizeGamingToggle.checked = Boolean(appSettings.optimizeForGaming);
+    optimizeGamingToggle.addEventListener('change', (event) => {
+      appSettings.optimizeForGaming = event.target.checked;
       saveAppSettings();
     });
   }

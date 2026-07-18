@@ -1393,8 +1393,8 @@ button {
 
 .settings-nav-divider {
   height: 1px;
-  margin: 8px 0 10px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.24), transparent);
+  margin: 5px 0 6px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.14), transparent);
 }
 
 .settings-sidebar .settings-nav-list .settings-nav-divider,
@@ -1409,19 +1409,34 @@ button {
   flex-direction: column;
   flex: 1 1 auto;
   height: 100%;
-  padding: 6px 0 8px;
+  padding: 4px 0 8px;
+  gap: 4px;
 }
 
-.settings-sidebar .settings-nav-list li {
+.settings-sidebar .settings-nav-list li:not(.settings-nav-divider):not(.settings-nav-divider--bottom) {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 6px;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 6px 8px;
+  min-height: 36px;
+  line-height: 1.2;
+  border-radius: 12px;
 }
 
 .settings-sidebar .settings-nav-list li.about-bottom {
   margin-top: auto;
   align-self: stretch;
+}
+
+.settings-sidebar .settings-nav-list .sidebar-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 20px;
+  min-height: 20px;
+  line-height: 1;
 }
 
 /* Pin About and its divider to the bottom-left of the sidebar */
@@ -1948,6 +1963,44 @@ progress::-moz-progress-bar {
 
 .settings-field input::placeholder {
   color: rgba(255, 255, 255, 0.45);
+}
+
+.gaming-select-row {
+  max-width: 320px;
+  gap: 8px;
+  overflow: hidden;
+  max-height: 90px;
+  opacity: 1;
+  transform: translateY(0);
+  transition: max-height 220ms ease, opacity 220ms ease, transform 220ms ease, margin-bottom 220ms ease;
+}
+
+.gaming-select-row.is-hidden {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-6px);
+  margin-bottom: 0;
+  pointer-events: none;
+}
+
+.gaming-select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.gaming-select option {
+  color: #111;
+}
+
+.game-optimization-desc {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.88rem;
+  line-height: 1.4;
 }
 
 .settings-section-divider {

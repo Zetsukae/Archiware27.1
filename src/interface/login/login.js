@@ -1,4 +1,4 @@
-import { bootSequenceLines } from '../bootSequence.js';
+import { bootSequenceLines } from '../bootSequence/bootSequence.js';
 
 const loginBackground = document.getElementById('loginBackground');
 const loginContainer = document.getElementById('loginContainer');
@@ -399,7 +399,6 @@ const runPowerSequence = (mode, options = {}) => {
 const settingsMenuButton = document.getElementById('settingsMenuButton');
 const settingsMenu = document.getElementById('settingsMenu');
 const rebootOption = document.getElementById('rebootOption');
-const shutdownOption = document.getElementById('shutdownOption');
 
 if (settingsMenuButton) {
   settingsMenuButton.addEventListener('click', (e) => {
@@ -413,16 +412,10 @@ if (rebootOption) {
     settingsMenu.classList.remove('visible');
     localStorage.setItem('archiware_session_active', 'false');
     unlockPowerSequence();
-    runPowerSequence('reboot');
-  });
-}
-
-if (shutdownOption) {
-  shutdownOption.addEventListener('click', () => {
-    settingsMenu.classList.remove('visible');
-    localStorage.setItem('archiware_session_active', 'false');
-    unlockPowerSequence();
-    runPowerSequence('shutdown', { waitForKey: true });
+    
+    // Redirect to boot sequence page with reboot mode
+    localStorage.setItem('bootSequenceMode', 'reboot');
+    window.location.replace('../bootSequence/index.html?mode=reboot');
   });
 }
 

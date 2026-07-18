@@ -3,7 +3,7 @@ import { initExplorerWindow, renderExplorerWindow, findExplorerNodeById, findExp
 import { initTextEditorWindow } from './apps/textEditor.js';
 import { initPluberryWindow } from './apps/pluberry.js';
 import { initBrowserWindow } from './apps/browser.js';
-import { bootSequenceLines } from './bootSequence.js';
+import { bootSequenceLines, startBootSequence, redirectToLogin as redirectToBootLogin, showShutdownScreen } from './bootSequence/bootSequence.js';
 
 const clock = document.getElementById('clock');
 const profileTrigger = document.getElementById('profileTrigger');
@@ -867,126 +867,34 @@ const runPowerSequence = (mode, options = {}) => {
   const shouldWaitForKey = options.waitForKey === true;
   showPowerOverlay();
 
-  let f2Pressed = false;
-  const handlePowerSequenceKey = (event) => {
-    if (event.key !== 'F2') return;
-    event.preventDefault();
-    event.stopPropagation();
-    f2Pressed = true;
-    document.removeEventListener('keydown', handlePowerSequenceKey);
-    window.removeEventListener('keydown', handlePowerSequenceKey);
-  };
-  document.addEventListener('keydown', handlePowerSequenceKey);
-  window.addEventListener('keydown', handlePowerSequenceKey);
+  const targetMode = mode === 'shutdown' ? 'shutdown' : 'reboot';
+  const bootSequenceUrl = `./bootSequence/index.html?mode=${targetMode}`;
+
+  localStorage.setItem('bootSequenceMode', targetMode);
+  localStorage.setItem('archiware_session_active', 'false');
 
   if (powerTitle) {
-    powerTitle.textContent = '';
+    powerTitle.textContent = targetMode === 'shutdown' ? 'Shutting down' : 'Rebooting';
   }
 
   if (powerLog) {
     powerLog.innerHTML = '';
   }
 
-  const delay = mode === 'shutdown' ? 120 : 140;
-  let index = 0;
+  lockPowerSequence();
 
-  const revealNextLine = () => {
-    if (!powerLog) {
-      return;
-    }
-
-    const line = document.createElement('div');
-    line.className = 'power-line';
-
-    const content = bootSequenceLines[index];
-    if (content.includes('[ OK ]')) {
-      const prefix = content.split('[ OK ]')[0];
-      const suffix = content.split('[ OK ]')[1] || '';
-      line.innerHTML = `${prefix}[ <span style="color:#4ade80">OK</span> ]${suffix}`;
-    } else {
-      line.textContent = content;
-    }
-
-    powerLog.appendChild(line);
-
-    requestAnimationFrame(() => {
-      line.classList.add('is-visible');
-      if (powerLog) {
-        powerLog.scrollTop = powerLog.scrollHeight;
-      }
-    });
-
-    index += 1;
-
-    if (index < bootSequenceLines.length) {
-      setTimeout(revealNextLine, delay);
-    } else if (mode === 'shutdown') {
-      setTimeout(() => {
-        if (powerLog) {
-          powerLog.innerHTML = '';
-          powerLog.scrollTop = 0;
-        }
-
-        document.removeEventListener('keydown', handlePowerSequenceKey);
-        window.removeEventListener('keydown', handlePowerSequenceKey);
-
-        if (f2Pressed) {
-          hidePowerOverlay();
-          window.location.replace(getUefiUrl());
-          return;
-        }
-
-        lockPowerSequence();
-
-        if (shouldWaitForKey) {
-          setTimeout(() => {
-            hidePowerOverlay();
-            redirectToLogin('./login/', { showBootAnimation: true });
-          }, 5000);
-        } else {
-          setTimeout(() => {
-            hidePowerOverlay();
-            redirectToLogin('./login/', { showBootAnimation: true });
-          }, 5000);
-        }
-      }, 200);
-    } else {
-      setTimeout(() => {
-        if (powerLog) {
-          powerLog.innerHTML = '';
-          powerLog.scrollTop = 0;
-        }
-
-        document.removeEventListener('keydown', handlePowerSequenceKey);
-        window.removeEventListener('keydown', handlePowerSequenceKey);
-
-        if (f2Pressed) {
-          hidePowerOverlay();
-          redirectToUefiWithDelay(1500);
-          return;
-        }
-
-        lockPowerSequence();
-
-        setTimeout(() => {
-          hidePowerOverlay();
-          redirectToLogin('./login/', { showBootAnimation: true });
-        }, 3000);
-      }, 200);
-    }
-  };
-
-  revealNextLine();
+  setTimeout(() => {
+    hidePowerOverlay();
+    window.location.replace(bootSequenceUrl);
+  }, shouldWaitForKey ? 250 : 250);
 };
 
 const shutdown = () => {
-  localStorage.setItem('archiware_session_active', 'false');
   unlockPowerSequence();
   runPowerSequence('shutdown', { waitForKey: true });
 };
 
 const reboot = () => {
-  localStorage.setItem('archiware_session_active', 'false');
   unlockPowerSequence();
   runPowerSequence('reboot');
 };
@@ -1267,6 +1175,54 @@ let currentResize = null;
 const MIN_WINDOW_WIDTH = 360;
 const MIN_WINDOW_HEIGHT = 240;
 
+const isAncestor = (ancestor, descendant) => {
+  let node = descendant.parentElement;
+  while (node) {
+    if (node === ancestor) return true;
+    node = node.parentElement;
+  }
+  return false;
+};
+
+const rectsOverlap = (rectA, rectB) => {
+  return rectA.left < rectB.right && rectA.right > rectB.left && rectA.top < rectB.bottom && rectA.bottom > rectB.top;
+};
+
+const hasOverlapInSettingsWindow = (win, targetWidth, targetHeight) => {
+  if (win.id !== 'settingsWindow') return false;
+
+  const clone = win.cloneNode(true);
+  clone.style.position = 'fixed';
+  clone.style.left = '-9999px';
+  clone.style.top = '-9999px';
+  clone.style.width = `${targetWidth}px`;
+  clone.style.height = `${targetHeight}px`;
+  clone.style.visibility = 'hidden';
+  clone.style.pointerEvents = 'none';
+  clone.style.overflow = 'hidden';
+  document.body.appendChild(clone);
+
+  const candidates = Array.from(clone.querySelectorAll('button, input, select, textarea, .settings-row, .settings-field'))
+    .filter((el) => el.offsetWidth > 0 && el.offsetHeight > 0);
+
+  let hasOverlap = false;
+
+  for (let i = 0; i < candidates.length && !hasOverlap; i += 1) {
+    const rectA = candidates[i].getBoundingClientRect();
+    for (let j = i + 1; j < candidates.length; j += 1) {
+      const rectB = candidates[j].getBoundingClientRect();
+      if (isAncestor(candidates[i], candidates[j]) || isAncestor(candidates[j], candidates[i])) continue;
+      if (rectsOverlap(rectA, rectB)) {
+        hasOverlap = true;
+        break;
+      }
+    }
+  }
+
+  document.body.removeChild(clone);
+  return hasOverlap;
+};
+
 const startResizingWindow = (win, event) => {
   if (win.id === 'mainWindow' || win.classList.contains('is-fullscreen')) return;
   if (event.button !== 0) return;
@@ -1306,8 +1262,21 @@ const startResizingWindow = (win, event) => {
     const maxWidth = Math.max(MIN_WINDOW_WIDTH, desktopWidth - activeWin.offsetLeft - 24);
     const maxHeight = Math.max(MIN_WINDOW_HEIGHT, desktopHeight - activeWin.offsetTop - 24);
 
-    const newWidth = Math.min(Math.max(MIN_WINDOW_WIDTH, baseWidth + deltaX), maxWidth);
-    const newHeight = Math.min(Math.max(MIN_WINDOW_HEIGHT, baseHeight + deltaY), maxHeight);
+    let newWidth = Math.min(Math.max(MIN_WINDOW_WIDTH, baseWidth + deltaX), maxWidth);
+    let newHeight = Math.min(Math.max(MIN_WINDOW_HEIGHT, baseHeight + deltaY), maxHeight);
+
+    if (activeWin.id === 'settingsWindow') {
+      if (hasOverlapInSettingsWindow(activeWin, newWidth, newHeight)) {
+        if (!hasOverlapInSettingsWindow(activeWin, newWidth, activeWin.offsetHeight)) {
+          newHeight = activeWin.offsetHeight;
+        } else if (!hasOverlapInSettingsWindow(activeWin, activeWin.offsetWidth, newHeight)) {
+          newWidth = activeWin.offsetWidth;
+        } else {
+          newWidth = activeWin.offsetWidth;
+          newHeight = activeWin.offsetHeight;
+        }
+      }
+    }
 
     activeWin.style.width = `${newWidth}px`;
     activeWin.style.height = `${newHeight}px`;

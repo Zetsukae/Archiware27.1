@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Archiware OS</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="../public/icons/archiware.png" sizes="any">
 </head>
 <body>
   <div class="desktop">
@@ -26,7 +27,6 @@
       </div>
       <div class="profile-section">
         <p class="section-title">Power</p>
-        <button class="profile-button" id="powerOffBtn">Shutdown</button>
         <button class="profile-button" id="restartBtn">Reboot</button>
       </div>
     </div>
@@ -158,7 +158,6 @@
           </div>
           <button class="os-launcher-power-btn" id="osLauncherPowerBtn" type="button" aria-label="Power options">⏻</button>
           <div class="os-launcher-power-menu hidden" id="osLauncherPowerMenu" aria-hidden="true">
-            <button type="button" class="os-launcher-power-item" data-power="shutdown">Shut Down</button>
             <button type="button" class="os-launcher-power-item" data-power="restart">Restart</button>
           </div>
         </div>
@@ -192,6 +191,7 @@
               <li class="settings-nav-divider" aria-hidden="true"></li>
               <li data-settings-tab="general"><span class="sidebar-icon"><img src="../public/icons/general.svg" alt="General" /></span> General</li>
               <li data-settings-tab="appearance"><span class="sidebar-icon"><img src="../public/icons/customize.svg" alt="Appearance" /></span> Appearance</li>
+              <li data-settings-tab="gaming"><span class="sidebar-icon"><img src="../public/icons/browser.svg" alt="Gaming" /></span> Gaming</li>
               <li class="settings-nav-divider settings-nav-divider--bottom" aria-hidden="true"></li>
               <li class="about-bottom" data-settings-tab="about"><span class="sidebar-icon"><img src="../public/icons/about.svg" alt="About" /></span> About</li>
             </ul>
@@ -323,6 +323,45 @@
               <h3>Dock</h3>
               <div class="settings-row settings-toggle-row"><span>Show dock labels</span><label class="toggle-switch"><input type="checkbox" id="dockLabelsToggle" checked /><span class="toggle-slider"></span></label></div>
               <div class="settings-row settings-toggle-row"><span>Auto-hide dock</span><label class="toggle-switch"><input type="checkbox" id="dockAutoHideToggle" /><span class="toggle-slider"></span></label></div>
+            </div>
+          </div>
+
+          <div class="settings-panel" data-settings-panel="gaming">
+            <div class="settings-section">
+              <h3>Compatibility</h3>
+              <div class="settings-row settings-toggle-row">
+                <span>Activate Proton +</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="protonToggle" checked />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div id="protonVersionField" class="settings-field gaming-select-row">
+                <span>Proton version</span>
+                <select id="protonVersionSelect" class="gaming-select">
+                  <option value="GE-Proton">GE-Proton</option>
+                  <option value="Proton Experimental">Proton Experimental</option>
+                  <option value="Proton Stable">Proton Stable</option>
+                </select>
+              </div>
+              <div class="settings-row settings-toggle-row">
+                <span>Activate Wine</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="wineToggle" checked />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+            <div class="settings-section">
+              <h3>Gaming optimization</h3>
+              <div class="settings-row settings-toggle-row">
+                <span>Optimize for Gaming</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="optimizeGamingToggle" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <p class="game-optimization-desc">Reduces background overhead and prioritizes performance for games and compatibility layers.</p>
             </div>
           </div>
 

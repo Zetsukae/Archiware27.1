@@ -17,6 +17,7 @@ const explorerRootNode = {
           children: [
             { id: 'about-icon', name: 'about.svg', type: 'file', icon: '🖼️' },
             { id: 'app-icon', name: 'app.svg', type: 'file', icon: '🖼️' },
+            { id: 'archiware-icon', name: 'archiware.svg', type: 'file', icon: '🖼️' },
             { id: 'browser-icon', name: 'browser.svg', type: 'file', icon: '🖼️' },
             { id: 'customize-icon', name: 'customize.svg', type: 'file', icon: '🖼️' },
             { id: 'explorer-icon', name: 'explorer.svg', type: 'file', icon: '🖼️' },
@@ -262,10 +263,10 @@ export const renderExplorerWindow = (windowEl, showContextMenu, openTextEditorWi
       if (entry.type === 'folder') card.classList.add('is-folder');
 
       const isTextOrPdfFile = entry.type === 'file' && /\.(txt|md|markdown|pdf)$/i.test(entry.name || '');
-      const isSvgFile = entry.type === 'file' && /\.svg$/i.test(entry.name || '');
+      const isImageFile = entry.type === 'file' && /\.(svg|png|ico)$/i.test(entry.name || '');
       const iconHtml = entry.type === 'folder'
         ? '<img src="../public/icons/explorer.svg" alt="Folder" />'
-        : isSvgFile
+        : isImageFile
           ? `<img src="../public/icons/${escapeExplorerText(entry.name)}" alt="${escapeExplorerText(entry.name)}" />`
           : isTextOrPdfFile
             ? '<img src="../public/icons/text.svg" alt="Document file" />'

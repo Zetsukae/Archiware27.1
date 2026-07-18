@@ -1,0 +1,142 @@
+/**
+ * Boot Sequence Styles
+ * Consolidated styles for boot screen across all pages
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&display=swap');
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #000;
+  color: #00ff00;
+}
+
+/* Boot Screen - Main Container */
+.boot-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000 !important;
+  display: flex !important;
+  align-items: flex-start;
+  justify-content: flex-start;
+  z-index: 10000;
+  opacity: 1;
+  cursor: none;
+}
+
+.boot-screen * {
+  cursor: none;
+}
+
+.boot-screen.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.boot-screen.is-visible {
+  display: flex !important;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Boot Content */
+.boot-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Boot Terminal Display */
+.boot-terminal {
+  flex: 1;
+  background: #000 !important;
+  padding: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inconsolata', 'Courier New', monospace !important;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #f5f5f5 !important;
+}
+
+.boot-log {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  font-family: 'Inconsolata', 'Courier New', monospace !important;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #f5f5f5 !important;
+}
+
+.boot-log {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.boot-log::-webkit-scrollbar {
+  display: none;
+}
+
+.boot-line {
+  opacity: 0;
+  word-break: break-word;
+  font-family: 'Inconsolata', 'Courier New', monospace !important;
+  color: #f5f5f5 !important;
+  font-size: 12px;
+  line-height: 1.5;
+  transition: opacity 0.08s ease-out;
+}
+
+.boot-line.is-visible {
+  opacity: 1;
+}
+
+.boot-line-ok {
+  color: #22c55e !important;
+  font-weight: bold;
+}
+
+/* Boot Screen Animations */
+@keyframes bootFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Blinking cursor animation */
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.boot-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: #00ff00;
+  margin-left: 2px;
+  animation: blink 1s infinite;
+}
+
+

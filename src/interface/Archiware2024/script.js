@@ -207,6 +207,7 @@ document.addEventListener("keydown", (e) => {
     e.stopPropagation()
 
     f2SpamDetected = true
+    redirectToUefiInstantly()
   }
 })
 
