@@ -28,6 +28,7 @@ const windowControls = document.querySelectorAll('.window__control');
 const welcomeUsernameEl = document.getElementById('welcomeUsername');
 const profileTitleEl = document.getElementById('profileTitle');
 const profileSubtitleEl = document.getElementById('profileSubtitle');
+const profileAvatarImg = document.getElementById('profileAvatarImg');
 const topbar = document.querySelector('.desktop__topbar');
 const dock = document.querySelector('.dock');
 const osLauncherOverlay = document.getElementById('osLauncherOverlay');
@@ -101,6 +102,48 @@ const getDockAppConfig = (appId) => {
     editor: { label: 'Text Editor', icon: '../public/icons/textEditor.svg' }
   };
   return appConfigs[appId] || null;
+};
+
+const rectsOverlap = (rectA, rectB) => {
+  return rectA.left < rectB.right && rectA.right > rectB.left && rectA.top < rectB.bottom && rectA.bottom > rectB.top;
+};
+
+const overlapAreaRatio = (targetRect, windowRect) => {
+  const overlapLeft = Math.max(targetRect.left, windowRect.left);
+  const overlapTop = Math.max(targetRect.top, windowRect.top);
+  const overlapRight = Math.min(targetRect.right, windowRect.right);
+  const overlapBottom = Math.min(targetRect.bottom, windowRect.bottom);
+
+  if (overlapRight <= overlapLeft || overlapBottom <= overlapTop) return 0;
+  const overlapArea = (overlapRight - overlapLeft) * (overlapBottom - overlapTop);
+  const targetArea = targetRect.width * targetRect.height;
+  return targetArea > 0 ? overlapArea / targetArea : 0;
+};
+
+const isElementOverlappedByAnyWindow = (element, threshold = 0) => {
+  if (!element) return false;
+  const targetRect = element.getBoundingClientRect();
+  const visibleWindows = Array.from(document.querySelectorAll('.window'))
+    .filter((win) => !win.classList.contains('is-closed') && !win.classList.contains('is-minimized'));
+
+  return visibleWindows.some((win) => {
+    if (win === element) return false;
+    const rect = win.getBoundingClientRect();
+    if (!rectsOverlap(targetRect, rect)) return false;
+    return overlapAreaRatio(targetRect, rect) >= threshold;
+  });
+};
+
+const updateDesktopUiVisibility = () => {
+  if (dock) {
+    dock.classList.toggle('is-hiding', isElementOverlappedByAnyWindow(dock));
+  }
+  if (profileTrigger) {
+    profileTrigger.classList.toggle('is-hiding', isElementOverlappedByAnyWindow(profileTrigger, 0.1));
+  }
+  if (clock) {
+    clock.classList.toggle('is-hiding', isElementOverlappedByAnyWindow(clock, 0.1));
+  }
 };
 
 const refreshRunningDockApps = () => {
@@ -565,16 +608,43 @@ const getCurrentUsername = () => {
   return (stored || '').trim() || 'User';
 };
 
+const resolveAvatarUrl = (avatarValue) => {
+  if (!avatarValue) return '';
+  if (avatarValue.startsWith('data:') || avatarValue.startsWith('http://') || avatarValue.startsWith('https://') || avatarValue.startsWith('blob:')) {
+    return avatarValue;
+  }
+  if (avatarValue.startsWith('/')) {
+    return `${window.location.origin}${avatarValue}`;
+  }
+  if (avatarValue.includes('/')) {
+    return avatarValue;
+  }
+  return new URL(`src/public/avatars/${avatarValue}`, window.location.href).href;
+};
+
+const updateProfileAvatar = () => {
+  const savedAvatar = localStorage.getItem('archiware_profile');
+  const avatarUrl = resolveAvatarUrl(savedAvatar || 'happy_avatar.svg');
+  if (profileAvatarImg) {
+    profileAvatarImg.src = avatarUrl;
+  }
+};
+
 const updateWelcomeUsername = () => {
   const username = getCurrentUsername();
   if (welcomeUsernameEl) welcomeUsernameEl.textContent = username;
-  if (profileSubtitleEl) profileSubtitleEl.textContent = username;
+  if (profileTitleEl) profileTitleEl.textContent = username;
+  if (profileSubtitleEl) profileSubtitleEl.textContent = 'Profile';
 };
 
+updateProfileAvatar();
 updateWelcomeUsername();
 window.addEventListener('storage', (event) => {
   if (event.key === 'archiware_username' || event.key === 'username' || event.key === 'userName') {
     updateWelcomeUsername();
+  }
+  if (event.key === 'archiware_profile') {
+    updateProfileAvatar();
   }
 });
 
@@ -1175,54 +1245,6 @@ let currentResize = null;
 const MIN_WINDOW_WIDTH = 360;
 const MIN_WINDOW_HEIGHT = 240;
 
-const isAncestor = (ancestor, descendant) => {
-  let node = descendant.parentElement;
-  while (node) {
-    if (node === ancestor) return true;
-    node = node.parentElement;
-  }
-  return false;
-};
-
-const rectsOverlap = (rectA, rectB) => {
-  return rectA.left < rectB.right && rectA.right > rectB.left && rectA.top < rectB.bottom && rectA.bottom > rectB.top;
-};
-
-const hasOverlapInSettingsWindow = (win, targetWidth, targetHeight) => {
-  if (win.id !== 'settingsWindow') return false;
-
-  const clone = win.cloneNode(true);
-  clone.style.position = 'fixed';
-  clone.style.left = '-9999px';
-  clone.style.top = '-9999px';
-  clone.style.width = `${targetWidth}px`;
-  clone.style.height = `${targetHeight}px`;
-  clone.style.visibility = 'hidden';
-  clone.style.pointerEvents = 'none';
-  clone.style.overflow = 'hidden';
-  document.body.appendChild(clone);
-
-  const candidates = Array.from(clone.querySelectorAll('button, input, select, textarea, .settings-row, .settings-field'))
-    .filter((el) => el.offsetWidth > 0 && el.offsetHeight > 0);
-
-  let hasOverlap = false;
-
-  for (let i = 0; i < candidates.length && !hasOverlap; i += 1) {
-    const rectA = candidates[i].getBoundingClientRect();
-    for (let j = i + 1; j < candidates.length; j += 1) {
-      const rectB = candidates[j].getBoundingClientRect();
-      if (isAncestor(candidates[i], candidates[j]) || isAncestor(candidates[j], candidates[i])) continue;
-      if (rectsOverlap(rectA, rectB)) {
-        hasOverlap = true;
-        break;
-      }
-    }
-  }
-
-  document.body.removeChild(clone);
-  return hasOverlap;
-};
-
 const startResizingWindow = (win, event) => {
   if (win.id === 'mainWindow' || win.classList.contains('is-fullscreen')) return;
   if (event.button !== 0) return;
@@ -1262,24 +1284,12 @@ const startResizingWindow = (win, event) => {
     const maxWidth = Math.max(MIN_WINDOW_WIDTH, desktopWidth - activeWin.offsetLeft - 24);
     const maxHeight = Math.max(MIN_WINDOW_HEIGHT, desktopHeight - activeWin.offsetTop - 24);
 
-    let newWidth = Math.min(Math.max(MIN_WINDOW_WIDTH, baseWidth + deltaX), maxWidth);
-    let newHeight = Math.min(Math.max(MIN_WINDOW_HEIGHT, baseHeight + deltaY), maxHeight);
-
-    if (activeWin.id === 'settingsWindow') {
-      if (hasOverlapInSettingsWindow(activeWin, newWidth, newHeight)) {
-        if (!hasOverlapInSettingsWindow(activeWin, newWidth, activeWin.offsetHeight)) {
-          newHeight = activeWin.offsetHeight;
-        } else if (!hasOverlapInSettingsWindow(activeWin, activeWin.offsetWidth, newHeight)) {
-          newWidth = activeWin.offsetWidth;
-        } else {
-          newWidth = activeWin.offsetWidth;
-          newHeight = activeWin.offsetHeight;
-        }
-      }
-    }
+    const newWidth = Math.min(Math.max(MIN_WINDOW_WIDTH, baseWidth + deltaX), maxWidth);
+    const newHeight = Math.min(Math.max(MIN_WINDOW_HEIGHT, baseHeight + deltaY), maxHeight);
 
     activeWin.style.width = `${newWidth}px`;
     activeWin.style.height = `${newHeight}px`;
+    updateDesktopUiVisibility();
   };
 
   const stopResize = () => {
@@ -1358,15 +1368,15 @@ const updateDraggingWindow = (event) => {
     nextTop + win.offsetHeight >= desktopHeight - 96 ||
     (nextTop + win.offsetHeight >= desktopHeight - 170 && nextLeft + win.offsetWidth > desktopWidth - 220)
   );
-  const shouldHideTopbar = isActiveWindow && nextTop <= 72;
 
   win.style.left = `${nextLeft}px`;
   win.style.top = `${Math.max(0, Math.min(nextTop, maxTop))}px`;
 
-  if (topbar && dock) {
-    topbar.classList.toggle('is-hiding', shouldHideTopbar);
+  if (dock) {
     dock.classList.toggle('is-hiding', shouldHideDock);
   }
+
+  updateDesktopUiVisibility();
 };
 
 const stopDraggingWindow = (event) => {
@@ -1375,8 +1385,7 @@ const stopDraggingWindow = (event) => {
   currentDrag = null;
   win.classList.remove('is-dragging');
   win.style.transition = '';
-  if (topbar) topbar.classList.remove('is-hiding');
-  if (dock) dock.classList.remove('is-hiding');
+  updateDesktopUiVisibility();
   if (event?.pointerId !== undefined) {
     try { win.releasePointerCapture(event.pointerId); } catch (e) {}
   }
@@ -1528,7 +1537,19 @@ if (restartBtn) {
   });
 }
 
+const openSettingsFromProfileBtn = document.getElementById('openSettingsFromProfile');
 const logOutBtn = document.getElementById('quickLogOutBtn');
+
+if (openSettingsFromProfileBtn) {
+  openSettingsFromProfileBtn.addEventListener('click', () => {
+    if (profilePopup) {
+      profilePopup.classList.remove('visible');
+      profilePopup.classList.add('hidden');
+      profilePopup.setAttribute('aria-hidden', 'true');
+    }
+    openSettingsWindow();
+  });
+}
 
 if (logOutBtn) {
   logOutBtn.addEventListener('click', () => {
