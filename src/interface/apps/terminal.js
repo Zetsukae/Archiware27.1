@@ -70,7 +70,7 @@ export const initTerminalWindow = (windowEl) => {
         break;
       }
       case 'version':
-        appendLine('Archiware0S Terminal v1.0 — Firmware Archiware0S 27.1 CFE0-BJRKWONM23F', 'terminal-output-text');
+        appendLine('ArchiwareOS Terminal ABF0 ; Firmware ArchiwareOS 27.1 CFE0-BJRKWONM23F', 'terminal-output-text');
         break;
       case 'about':
         appendLine('Liquid Glass Terminal — lightweight shell emulator.', 'terminal-output-text');
