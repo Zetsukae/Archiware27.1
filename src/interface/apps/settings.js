@@ -33,7 +33,8 @@ const defaultSettings = {
   protonEnabled: true,
   wineEnabled: true,
   protonVersion: 'GE-Proton',
-  optimizeForGaming: false
+  optimizeForGaming: false,
+  sudoEnabled: false
 };
 
 const loadAppSettings = () => {
@@ -216,6 +217,8 @@ export const initSettingsWindow = (windowEl) => {
 
   const tabItems = windowEl.querySelectorAll('[data-settings-tab]');
   const panels = windowEl.querySelectorAll('[data-settings-panel]');
+  let updateSectionTimer = null;
+  const updatePanel = windowEl.querySelector('[data-settings-panel="update"]');
   const transparencySlider = windowEl.querySelector('#transparencySlider');
   const darkModeToggle = windowEl.querySelector('#darkModeToggle');
   const soundAccessButton = windowEl.querySelector('#soundAccessButton');
@@ -248,6 +251,16 @@ export const initSettingsWindow = (windowEl) => {
   const setActiveTab = (tabKey) => {
     tabItems.forEach((item) => item.classList.toggle('active', item.dataset.settingsTab === tabKey));
     panels.forEach((panel) => panel.classList.toggle('active', panel.dataset.settingsPanel === tabKey));
+
+    if (updatePanel) {
+      updatePanel.classList.remove('show-update-info');
+      clearTimeout(updateSectionTimer);
+      if (tabKey === 'update') {
+        updateSectionTimer = setTimeout(() => {
+          updatePanel.classList.add('show-update-info');
+        }, 1500);
+      }
+    }
   };
 
   tabItems.forEach((item) => {

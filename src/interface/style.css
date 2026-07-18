@@ -989,6 +989,77 @@ button {
 .window__control--close { background: #ff5f56; }
 .window__control--minimize { background: #ffbd2e; }
 
+.terminal-content {
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.terminal-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.terminal-output {
+  flex: 1;
+  min-height: 320px;
+  max-height: 100%;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-y: auto;
+  color: #e8f8fe;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Segoe UI Mono', monospace;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.terminal-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.terminal-prompt {
+  color: #7ee0ff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Segoe UI Mono', monospace;
+  font-weight: 700;
+}
+
+.terminal-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #f8fbff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Segoe UI Mono', monospace;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.terminal-line {
+  margin-bottom: 8px;
+}
+
+.terminal-info {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.terminal-output-text {
+  color: #f4f9ff;
+}
+
+.terminal-error {
+  color: #ffb3b3;
+}
+
+.terminal-welcome {
+  color: #8de0ff;
+}
+
 .window__title {
   position: absolute;
   left: 50%;
@@ -1421,6 +1492,15 @@ button {
   cursor: default;
 }
 
+.settings-sidebar .settings-nav-list .settings-nav-divider--bottom {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  height: 1px;
+  bottom: 90px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+}
+
 
 .settings-sidebar .settings-nav-list {
   display: flex;
@@ -1447,6 +1527,14 @@ button {
   align-self: stretch;
 }
 
+.settings-sidebar .settings-nav-list .update-bottom {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 53px;
+  margin: 0;
+}
+
 .settings-sidebar .settings-nav-list .sidebar-icon {
   display: inline-flex;
   align-items: center;
@@ -1471,7 +1559,7 @@ button {
   left: 12px;
   right: 12px;
   height: 1px;
-  bottom: 48px; /* reduced spacing to sit closer above About */
+  bottom: 70px; /* reduced spacing to sit closer above About */
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
 }
 
@@ -1509,6 +1597,30 @@ button {
   margin: 0;
   font-size: 1rem;
   letter-spacing: 0.01em;
+}
+
+.settings-panel[data-settings-panel="update"] .update-status,
+.settings-panel[data-settings-panel="update"] .update-version {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.settings-panel[data-settings-panel="update"].show-update-info .update-status,
+.settings-panel[data-settings-panel="update"].show-update-info .update-version {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.settings-panel[data-settings-panel="update"] .update-status {
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin: 0 0 4px;
+}
+
+.settings-panel[data-settings-panel="update"] .update-version {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .admin-section {

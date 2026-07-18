@@ -3,6 +3,7 @@ import { initExplorerWindow, renderExplorerWindow, findExplorerNodeById, findExp
 import { initTextEditorWindow } from './apps/textEditor.js';
 import { initPluberryWindow } from './apps/pluberry.js';
 import { initBrowserWindow } from './apps/browser.js';
+import { initTerminalWindow } from './apps/terminal.js';
 import { bootSequenceLines, startBootSequence, redirectToLogin as redirectToBootLogin, showShutdownScreen } from './bootSequence/bootSequence.js';
 
 const clock = document.getElementById('clock');
@@ -43,9 +44,10 @@ const osLauncherApps = [
   { id: 'browser', label: 'Browser', icon: '../public/icons/browser.svg' },
   { id: 'music', label: 'Music', icon: '../public/icons/music.svg' },
   { id: 'pluberry', label: 'Pluberry', icon: '../public/icons/app.svg' },
+  { id: 'terminal', label: 'Terminal', icon: '../public/icons/terminal.svg' },
   { id: 'editor', label: 'Text Editor', icon: '../public/icons/textEditor.svg' }
 ];
-const appWindowCounters = { explorer: 1, settings: 1, editor: 0, pluberry: 0, browser: 0 };
+const appWindowCounters = { explorer: 1, settings: 1, editor: 0, pluberry: 0, browser: 0, terminal: 0 };
 const windowPlacementState = { offsetX: 30, offsetY: 30 };
 let memoryKillSwitchTriggered = false;
 let altKeyState = { isPressed: false, usedWithOtherKey: false };
@@ -99,6 +101,7 @@ const getDockAppConfig = (appId) => {
     settings: { label: 'Settings', icon: '../public/icons/settings.svg' },
     browser: { label: 'Browser', icon: '../public/icons/browser.svg' },
     pluberry: { label: 'Pluberry', icon: '../public/icons/app.svg' },
+    terminal: { label: 'Terminal', icon: '../public/icons/terminal.svg' },
     editor: { label: 'Text Editor', icon: '../public/icons/textEditor.svg' }
   };
   return appConfigs[appId] || null;
@@ -1015,6 +1018,7 @@ const getAppIdForWindow = (windowId) => {
   if (id.startsWith('settingsWindow')) return 'settings';
   if (id.startsWith('pluberryWindow')) return 'pluberry';
   if (id.startsWith('browserWindow')) return 'browser';
+  if (id.startsWith('terminalWindow')) return 'terminal';
   if (id.startsWith('textEditorWindow')) return 'editor';
   return null;
 };
@@ -1045,7 +1049,7 @@ const openFolderInExplorer = (folderName) => {
 };
 
 const createAppWindow = (appId) => {
-  const templateId = appId === 'explorer' ? 'explorerWindow' : appId === 'settings' ? 'settingsWindow' : appId === 'editor' ? 'textEditorWindow' : appId === 'pluberry' ? 'pluberryWindow' : appId === 'browser' ? 'browserWindow' : null;
+  const templateId = appId === 'explorer' ? 'explorerWindow' : appId === 'settings' ? 'settingsWindow' : appId === 'editor' ? 'textEditorWindow' : appId === 'pluberry' ? 'pluberryWindow' : appId === 'browser' ? 'browserWindow' : appId === 'terminal' ? 'terminalWindow' : null;
   const template = document.getElementById(templateId);
   if (!template) return null;
 
@@ -1055,8 +1059,8 @@ const createAppWindow = (appId) => {
   clone.id = instanceId;
   clone.classList.remove('is-closed', 'is-minimized', 'minimized-hidden');
   clone.setAttribute('aria-hidden', 'false');
-  clone.setAttribute('aria-label', appId === 'explorer' ? 'Explorer' : appId === 'settings' ? 'Settings' : appId === 'editor' ? 'Text Editor' : appId === 'pluberry' ? 'Pluberry' : appId === 'browser' ? 'Browser' : '');
-  clone.dataset.appLabel = appId === 'explorer' ? 'Explorer' : appId === 'settings' ? 'Settings' : appId === 'editor' ? 'Text Editor' : appId === 'pluberry' ? 'Pluberry' : appId === 'browser' ? 'Browser' : '';
+  clone.setAttribute('aria-label', appId === 'explorer' ? 'Explorer' : appId === 'settings' ? 'Settings' : appId === 'editor' ? 'Text Editor' : appId === 'pluberry' ? 'Pluberry' : appId === 'browser' ? 'Browser' : appId === 'terminal' ? 'Terminal' : '');
+  clone.dataset.appLabel = appId === 'explorer' ? 'Explorer' : appId === 'settings' ? 'Settings' : appId === 'editor' ? 'Text Editor' : appId === 'pluberry' ? 'Pluberry' : appId === 'browser' ? 'Browser' : appId === 'terminal' ? 'Terminal' : '';
   clone.style.width = '900px';
   clone.style.height = '560px';
   const position = getNextWindowPosition(900, 560);
@@ -1080,6 +1084,7 @@ const createAppWindow = (appId) => {
   if (appId === 'editor') initTextEditorWindow(clone, findExplorerNodeById, refreshExplorerWindows, createNewTextFileOnDesktop);
   if (appId === 'pluberry') initPluberryWindow(clone);
   if (appId === 'browser') initBrowserWindow(clone);
+  if (appId === 'terminal') initTerminalWindow(clone);
   windows = document.querySelectorAll('.window');
   focusWindow(clone);
   setDockOpenState(appId, true);
@@ -1127,6 +1132,8 @@ const createNewTextFileOnDesktop = () => {
   return fileNode;
 };
 
+const openTerminalWindow = () => createAppWindow('terminal');
+
 const openTextEditorWindow = (fileNode) => {
   let targetNode = fileNode;
   if (!targetNode || !isTextFileName(targetNode.name)) {
@@ -1158,9 +1165,11 @@ const launchAppWindow = (appId) => {
         ? openPluberryWindow()
         : appId === 'browser'
           ? openBrowserWindow()
-          : appId === 'editor'
-            ? openTextEditorWindow()
-            : null;
+          : appId === 'terminal'
+            ? openTerminalWindow()
+            : appId === 'editor'
+              ? openTextEditorWindow()
+              : null;
   if (win) focusWindow(win);
   return win;
 };

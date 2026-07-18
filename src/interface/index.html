@@ -138,6 +138,9 @@
           <button class="dock__item" data-app="explorer" aria-label="Explorer">
             <img src="../public/icons/explorer.svg" alt="Explorer" />
           </button>
+          <button class="dock__item" data-app="terminal" aria-label="Terminal">
+            <img src="../public/icons/terminal.svg" alt="Terminal" />
+          </button>
           <button class="dock__item" data-app="settings" aria-label="Settings">
             <img src="../public/icons/settings.svg" alt="Settings" />
           </button>
@@ -194,8 +197,9 @@
               <li class="settings-nav-divider" aria-hidden="true"></li>
               <li data-settings-tab="general"><span class="sidebar-icon"><img src="../public/icons/general.svg" alt="General" /></span> General</li>
               <li data-settings-tab="appearance"><span class="sidebar-icon"><img src="../public/icons/customize.svg" alt="Appearance" /></span> Appearance</li>
-              <li data-settings-tab="gaming"><span class="sidebar-icon"><img src="../public/icons/browser.svg" alt="Gaming" /></span> Gaming</li>
+              <li data-settings-tab="gaming"><span class="sidebar-icon"><img src="../public/icons/controller.svg" alt="Gaming" /></span> Gaming</li>
               <li class="settings-nav-divider settings-nav-divider--bottom" aria-hidden="true"></li>
+              <li class="update-bottom" data-settings-tab="update"><span class="sidebar-icon"><img src="../public/icons/update.svg" alt="Update" /></span> Update</li>
               <li class="about-bottom" data-settings-tab="about"><span class="sidebar-icon"><img src="../public/icons/about.svg" alt="About" /></span> About</li>
             </ul>
           </div>
@@ -368,6 +372,14 @@
             </div>
           </div>
 
+          <div class="settings-panel" data-settings-panel="update">
+            <div class="settings-section">
+              <h3>Update</h3>
+              <p class="update-status">The System is Up to date</p>
+              <p class="update-version">Firmware version: ArchiwareOS 27.1 ; CFE0-BJRKWONM23F</p>
+            </div>
+          </div>
+
           <div class="settings-panel" data-settings-panel="about">
             <div class="settings-section about-section">
               <div class="about-title-row">
@@ -459,6 +471,31 @@
           <div class="path-bar editor-path">Untitled</div>
           <div class="editor-area">
             <textarea class="text-editor" spellcheck="true" placeholder="Start typing..."></textarea>
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <section class="window liquid-glass-card is-closed" id="terminalWindow" data-app-label="Terminal" aria-label="Terminal">
+    <div class="window__header finder-header">
+      <div class="window__controls">
+        <button class="window__control window__control--close" data-action="close" aria-label="Close"></button>
+        <button class="window__control window__control--minimize" data-action="minimize" aria-label="Minimize"></button>
+      </div>
+
+      <div class="finder-toolbar">
+        <div class="finder-title">Terminal</div>
+      </div>
+    </div>
+
+    <div class="window__content finder-content terminal-content">
+      <div class="finder-layout">
+        <main class="finder-main terminal-main">
+          <div class="terminal-output" aria-live="polite"></div>
+          <div class="terminal-input-row">
+            <span class="terminal-prompt">$</span>
+            <input class="terminal-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Type a command and press Enter" />
           </div>
         </main>
       </div>

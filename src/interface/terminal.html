@@ -1,0 +1,24 @@
+<section class="window liquid-glass-card is-closed" id="terminalWindow" data-app-label="Terminal" aria-label="Terminal">
+  <div class="window__header finder-header">
+    <div class="window__controls">
+      <button class="window__control window__control--close" data-action="close" aria-label="Close"></button>
+      <button class="window__control window__control--minimize" data-action="minimize" aria-label="Minimize"></button>
+    </div>
+
+    <div class="finder-toolbar">
+      <div class="finder-title">Terminal</div>
+    </div>
+  </div>
+
+  <div class="window__content finder-content terminal-content">
+    <div class="finder-layout">
+      <main class="finder-main terminal-main">
+        <div class="terminal-output" aria-live="polite"></div>
+        <div class="terminal-input-row">
+          <span class="terminal-prompt">$</span>
+          <input class="terminal-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Type a command and press Enter" />
+        </div>
+      </main>
+    </div>
+  </div>
+</section>
