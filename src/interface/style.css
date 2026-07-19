@@ -691,7 +691,7 @@ button {
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-  z-index: 10;
+  z-index: 10000;
   opacity: 0;
   transform: translateY(-8px);
   transition: opacity 0.22s ease, transform 0.22s ease;
@@ -783,7 +783,7 @@ button {
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-  z-index: 10;
+  z-index: 10000;
   opacity: 0;
   transform: translateY(-8px);
   transition: opacity 0.22s ease, transform 0.22s ease;
