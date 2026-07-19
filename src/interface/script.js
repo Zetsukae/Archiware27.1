@@ -45,9 +45,10 @@ const osLauncherApps = [
   { id: 'music', label: 'Music', icon: '../public/icons/music.svg' },
   { id: 'pluberry', label: 'Pluberry', icon: '../public/icons/app.svg' },
   { id: 'terminal', label: 'Terminal', icon: '../public/icons/terminal.svg' },
-  { id: 'editor', label: 'Text Editor', icon: '../public/icons/textEditor.svg' }
+  { id: 'editor', label: 'Text Editor', icon: '../public/icons/textEditor.svg' },
+  { id: 'store', label: 'Store', icon: '../public/icons/store.svg' }
 ];
-const appWindowCounters = { explorer: 1, settings: 1, editor: 0, pluberry: 0, browser: 0, terminal: 0 };
+const appWindowCounters = { explorer: 1, settings: 1, editor: 0, pluberry: 0, browser: 0, terminal: 0, store: 0 };
 const windowPlacementState = { offsetX: 30, offsetY: 30 };
 let memoryKillSwitchTriggered = false;
 let altKeyState = { isPressed: false, usedWithOtherKey: false };
@@ -102,7 +103,8 @@ const getDockAppConfig = (appId) => {
     browser: { label: 'Browser', icon: '../public/icons/browser.svg' },
     pluberry: { label: 'Pluberry', icon: '../public/icons/app.svg' },
     terminal: { label: 'Terminal', icon: '../public/icons/terminal.svg' },
-    editor: { label: 'Text Editor', icon: '../public/icons/textEditor.svg' }
+    editor: { label: 'Text Editor', icon: '../public/icons/textEditor.svg' },
+    store: { label: 'Store', icon: '../public/icons/store.svg' }
   };
   return appConfigs[appId] || null;
 };
@@ -1021,6 +1023,7 @@ const getAppIdForWindow = (windowId) => {
   if (id.startsWith('browserWindow')) return 'browser';
   if (id.startsWith('terminalWindow')) return 'terminal';
   if (id.startsWith('textEditorWindow')) return 'editor';
+  if (id.startsWith('storeWindow')) return 'store';
   return null;
 };
 
@@ -1049,8 +1052,64 @@ const openFolderInExplorer = (folderName) => {
   renderExplorerWindow(explorerWindow, window.showContextMenu, openTextEditorWindow);
 };
 
+const initStoreWindow = (win) => {
+  if (!win) return;
+  const categoryButtons = win.querySelectorAll('.store-category');
+  const cards = win.querySelectorAll('.store-card');
+  if (!categoryButtons.length || !cards.length) return;
+
+  const updateStoreVisibility = (category = 'all') => {
+    cards.forEach((card) => {
+      const shouldShow = category === 'all' || card.dataset.category === category;
+      card.classList.toggle('is-hidden', !shouldShow);
+      card.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+    });
+  };
+
+  categoryButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      categoryButtons.forEach((item) => item.classList.remove('is-active'));
+      button.classList.add('is-active');
+      updateStoreVisibility(button.dataset.storeCategory || 'all');
+    });
+  });
+
+  win.addEventListener('click', (event) => {
+    const button = event.target.closest('.store-card__action');
+    if (!button) return;
+
+    if (button.dataset.action === 'launch') {
+      const appId = button.dataset.app;
+      if (appId) {
+        launchAppWindow(appId);
+      }
+      return;
+    }
+
+    if (button.dataset.updateState === 'ready') {
+      button.textContent = 'Updating';
+      button.classList.add('is-updating');
+      button.classList.remove('is-error');
+
+      window.setTimeout(() => {
+        button.textContent = 'Update failed';
+        button.classList.add('is-error');
+        button.classList.remove('is-updating');
+        showNotification('Music update failed. Network or server error.', {
+          title: 'Update failed',
+          force: true,
+          timeout: 4000
+        });
+      }, 2000);
+      return;
+    }
+  });
+
+  updateStoreVisibility('all');
+};
+
 const createAppWindow = (appId) => {
-  const templateId = appId === 'explorer' ? 'explorerWindow' : appId === 'settings' ? 'settingsWindow' : appId === 'editor' ? 'textEditorWindow' : appId === 'pluberry' ? 'pluberryWindow' : appId === 'browser' ? 'browserWindow' : appId === 'terminal' ? 'terminalWindow' : null;
+  const templateId = appId === 'explorer' ? 'explorerWindow' : appId === 'settings' ? 'settingsWindow' : appId === 'editor' ? 'textEditorWindow' : appId === 'pluberry' ? 'pluberryWindow' : appId === 'browser' ? 'browserWindow' : appId === 'terminal' ? 'terminalWindow' : appId === 'store' ? 'storeWindow' : null;
   const template = document.getElementById(templateId);
   if (!template) return null;
 
@@ -1060,8 +1119,8 @@ const createAppWindow = (appId) => {
   clone.id = instanceId;
   clone.classList.remove('is-closed', 'is-minimized', 'minimized-hidden');
   clone.setAttribute('aria-hidden', 'false');
-  clone.setAttribute('aria-label', appId === 'explorer' ? 'Explorer' : appId === 'settings' ? 'Settings' : appId === 'editor' ? 'Text Editor' : appId === 'pluberry' ? 'Pluberry' : appId === 'browser' ? 'Browser' : appId === 'terminal' ? 'Terminal' : '');
-  clone.dataset.appLabel = appId === 'explorer' ? 'Explorer' : appId === 'settings' ? 'Settings' : appId === 'editor' ? 'Text Editor' : appId === 'pluberry' ? 'Pluberry' : appId === 'browser' ? 'Browser' : appId === 'terminal' ? 'Terminal' : '';
+  clone.setAttribute('aria-label', appId === 'explorer' ? 'Explorer' : appId === 'settings' ? 'Settings' : appId === 'editor' ? 'Text Editor' : appId === 'pluberry' ? 'Pluberry' : appId === 'browser' ? 'Browser' : appId === 'terminal' ? 'Terminal' : appId === 'store' ? 'Store' : '');
+  clone.dataset.appLabel = appId === 'explorer' ? 'Explorer' : appId === 'settings' ? 'Settings' : appId === 'editor' ? 'Text Editor' : appId === 'pluberry' ? 'Pluberry' : appId === 'browser' ? 'Browser' : appId === 'terminal' ? 'Terminal' : appId === 'store' ? 'Store' : '';
   const isDesktopView = window.innerWidth > 900;
   const viewWidth = isDesktopView ? Math.min(900, window.innerWidth - 80) : window.innerWidth - 24;
   const top = 12;
@@ -1100,6 +1159,7 @@ const createAppWindow = (appId) => {
   if (appId === 'pluberry') initPluberryWindow(clone);
   if (appId === 'browser') initBrowserWindow(clone);
   if (appId === 'terminal') initTerminalWindow(clone);
+  if (appId === 'store') initStoreWindow(clone);
   windows = document.querySelectorAll('.window');
   focusWindow(clone);
   updateDesktopUiVisibility();
@@ -1113,6 +1173,7 @@ const openExplorerWindow = () => createAppWindow('explorer');
 
 const openSettingsWindow = () => createAppWindow('settings');
 const openPluberryWindow = () => createAppWindow('pluberry');
+const openStoreWindow = () => createAppWindow('store');
 const openBrowserWindow = (url = '') => {
   const win = createAppWindow('browser');
   if (!win) return null;
@@ -1185,7 +1246,9 @@ const launchAppWindow = (appId) => {
             ? openTerminalWindow()
             : appId === 'editor'
               ? openTextEditorWindow()
-              : null;
+              : appId === 'store'
+                ? openStoreWindow()
+                : null;
   if (win) focusWindow(win);
   return win;
 };

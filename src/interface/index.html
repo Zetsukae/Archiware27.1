@@ -456,6 +456,88 @@
     </div>
   </section>
 
+  <section class="window liquid-glass-card is-closed" id="storeWindow" data-app-label="Store" aria-label="Store">
+    <div class="window__header finder-header">
+      <div class="window__controls">
+        <button class="window__control window__control--close" data-action="close" aria-label="Close"></button>
+        <button class="window__control window__control--minimize" data-action="minimize" aria-label="Minimize"></button>
+      </div>
+
+      <div class="finder-toolbar">
+        <div class="finder-title">Store</div>
+      </div>
+    </div>
+
+    <div class="window__content finder-content">
+      <div class="store-shell">
+        <aside class="store-sidebar">
+          <div class="store-sidebar__title">Categories</div>
+          <button class="store-category is-active" type="button" data-store-category="all">All</button>
+          <button class="store-category" type="button" data-store-category="applications">Applications</button>
+          <button class="store-category" type="button" data-store-category="web">Web</button>
+          <button class="store-category" type="button" data-store-category="productivity">Productivity</button>
+        </aside>
+
+        <main class="store-main">
+          <div class="store-hero">
+            <div>
+              <p class="store-eyebrow">Archiware Store</p>
+              <h2>Discover polished apps for your desktop</h2>
+              <p>An installation experience inspired by a macOS-like app store, with a lighter liquid-glass style.</p>
+            </div>
+          </div>
+
+          <div class="store-grid">
+            <article class="store-card" data-category="productivity">
+              <img class="store-card__icon" src="../public/icons/explorer.svg" alt="Explorer" />
+              <div class="store-card__body">
+                <div class="store-card__title">Explorer</div>
+                <div class="store-card__meta">Files • Productivity</div>
+              </div>
+              <button class="store-card__action is-installed" type="button" data-action="launch" data-app="explorer">Launch</button>
+            </article>
+
+            <article class="store-card" data-category="web">
+              <img class="store-card__icon" src="../public/icons/browser.svg" alt="Browser" />
+              <div class="store-card__body">
+                <div class="store-card__title">Browser</div>
+                <div class="store-card__meta">Navigation • Web</div>
+              </div>
+              <button class="store-card__action is-installed" type="button" data-action="launch" data-app="browser">Launch</button>
+            </article>
+
+            <article class="store-card" data-category="web">
+              <img class="store-card__icon" src="../public/icons/app.svg" alt="Pluberry" />
+              <div class="store-card__body">
+                <div class="store-card__title">Pluberry</div>
+                <div class="store-card__meta">Web • Utility</div>
+              </div>
+              <button class="store-card__action is-installed" type="button" data-action="launch" data-app="pluberry">Launch</button>
+            </article>
+
+            <article class="store-card" data-category="productivity">
+              <img class="store-card__icon" src="../public/icons/terminal.svg" alt="Terminal" />
+              <div class="store-card__body">
+                <div class="store-card__title">Terminal</div>
+                <div class="store-card__meta">Development • Productivity</div>
+              </div>
+              <button class="store-card__action is-installed" type="button" data-action="launch" data-app="terminal">Launch</button>
+            </article>
+
+            <article class="store-card" data-category="applications">
+              <img class="store-card__icon" src="../public/icons/music.svg" alt="Music" />
+              <div class="store-card__body">
+                <div class="store-card__title">Music</div>
+                <div class="store-card__meta">Media • Applications</div>
+              </div>
+              <button class="store-card__action store-card__action--update" data-update-state="ready" type="button">Update</button>
+            </article>
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+
   <!-- Hidden Text Editor template (not on dock or desktop) -->
   <section class="window liquid-glass-card is-closed" id="textEditorWindow" data-app-label="Text Editor" aria-label="Text Editor">
     <div class="window__header finder-header">
