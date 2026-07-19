@@ -1664,6 +1664,10 @@ button {
   flex-direction: column;
 }
 
+  .window[id^="settingsWindow"] .settings-sidebar-toggle {
+    display: none;
+  }
+
   @media (max-width: 900px) {
     .window[id^="settingsWindow"] .settings-sidebar,
     .window[id^="explorerWindow"] .finder-sidebar {
@@ -3258,7 +3262,7 @@ body.dark-mode .settings-section {
   font-family: inherit !important;
   font-size: 18px !important;
   color: rgba(255, 255, 255, 0.9) !important;
-  display: flex !important;
+  display: none !important;
   align-items: center !important;
   justify-content: center !important;
 
@@ -3273,6 +3277,12 @@ body.dark-mode .settings-section {
     0 8px 16px rgba(0, 0, 0, 0.15) !important;
   
   transition: all 0.5s ease-in-out !important;
+}
+
+@media (max-width: 900px) {
+  #liquid-glass-toggle {
+    display: flex !important;
+  }
 }
 
 #liquid-glass-toggle:hover {
